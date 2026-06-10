@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Country</title>
+</head>
+<body>
+    <h1>Add Country</h1>
+
+    <p>
+        <a href="/countries">Back to Countries</a>
+    </p>
+
+    <form method="post" action="/countries/add">
+        <p>
+            <label for="country_name">Country Name</label><br>
+            <input type="text" id="country_name" name="country_name" required>
+        </p>
+
+        <p>
+            <label for="visit_status">Visit Status</label><br>
+            <select id="visit_status" name="visit_status" required>
+                <option value="TRIP">TRIP</option>
+                <option value="STAY">STAY</option>
+                <option value="WANT">WANT</option>
+            </select>
+        </p>
+
+        <p>
+            <label for="visit_count">Visit Count</label><br>
+            <input type="number" id="visit_count" name="visit_count" min="0" value="0" required>
+        </p>
+
+        <p>
+            <label for="region_id">Region</label><br>
+            <select id="region_id" name="region_id" required>
+                {% for region in regions %}
+                <option value="{{ region.region_id }}">{{ region.region_name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>

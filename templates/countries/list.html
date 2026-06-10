@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Countries</title>
+</head>
+<body>
+    <h1>Countries</h1>
+
+    <p>
+        <a href="/">Home</a>
+        <a href="/countries/add">Add Country</a>
+    </p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Country</th>
+                <th>Status</th>
+                <th>Visit Count</th>
+                <th>Region</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for country in countries %}
+            <tr>
+                <td>{{ country.country_id }}</td>
+                <td>{{ country.country_name }}</td>
+                <td>{{ country.visit_status }}</td>
+                <td>{{ country.visit_count }}</td>
+                <td>{{ country.region_name or "" }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No countries yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
