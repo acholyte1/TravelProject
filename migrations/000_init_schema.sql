@@ -8,7 +8,7 @@ CREATE TABLE region_list (
 
 CREATE TABLE country_list (
     country_id INT AUTO_INCREMENT PRIMARY KEY,
-    country_name VARCHAR(100) NOT NULL,
+    country_name VARCHAR(100) NOT NULL UNIQUE,
     visit_status VARCHAR(20),
     visit_count INT DEFAULT 0,
     region_id INT,

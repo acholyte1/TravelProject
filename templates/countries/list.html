@@ -19,6 +19,7 @@
                 <th>Status</th>
                 <th>Visit Count</th>
                 <th>Region</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -29,10 +30,11 @@
                 <td>{{ country.visit_status }}</td>
                 <td>{{ country.visit_count }}</td>
                 <td>{{ country.region_name or "" }}</td>
+                <td><a href="/countries/{{ country.country_id }}/edit">수정</a></td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">No countries yet.</td>
+                <td colspan="6">No countries yet.</td>
             </tr>
             {% endfor %}
         </tbody>
