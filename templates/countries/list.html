@@ -11,14 +11,57 @@
         <a href="/countries/add">Add Country</a>
     </p>
 
+    <form method="get" action="/countries">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="direction" value="{{ direction }}">
+
+        <label for="country_id">ID</label>
+        <input type="number" id="country_id" name="country_id" min="1" value="{{ filters.country_id }}">
+
+        <label for="country_name">Country</label>
+        <input type="text" id="country_name" name="country_name" value="{{ filters.country_name }}">
+
+        <label for="visit_status">Status</label>
+        <select id="visit_status" name="visit_status">
+            <option value="">All</option>
+            <option value="TRIP" {% if filters.visit_status == "TRIP" %}selected{% endif %}>TRIP</option>
+            <option value="STAY" {% if filters.visit_status == "STAY" %}selected{% endif %}>STAY</option>
+            <option value="WANT" {% if filters.visit_status == "WANT" %}selected{% endif %}>WANT</option>
+        </select>
+
+        <label for="visit_count">Visit Count</label>
+        <input type="number" id="visit_count" name="visit_count" min="0" value="{{ filters.visit_count }}">
+
+        <label for="region_id">Region</label>
+        <select id="region_id" name="region_id">
+            <option value="">All</option>
+            {% for region in regions %}
+            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Search</button>
+        <a href="/countries">Reset</a>
+    </form>
+
     <table border="1">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Country</th>
-                <th>Status</th>
-                <th>Visit Count</th>
-                <th>Region</th>
+                {% set sort_fields = [
+                    ("id", "ID"),
+                    ("country", "Country"),
+                    ("status", "Status"),
+                    ("visit_count", "Visit Count"),
+                    ("region", "Region")
+                ] %}
+                {% for field, label in sort_fields %}
+                <th>
+                    {{ label }}
+                    <a href="{{ url_for('countries', sort=field, direction='asc', **filters) }}">▲</a>
+                    <a href="{{ url_for('countries', sort=field, direction='desc', **filters) }}">▼</a>
+                    {% if sort == field %}({{ direction|upper }}){% endif %}
+                </th>
+                {% endfor %}
                 <th>Action</th>
             </tr>
         </thead>
@@ -30,7 +73,7 @@
                 <td>{{ country.visit_status }}</td>
                 <td>{{ country.visit_count }}</td>
                 <td>{{ country.region_name or "" }}</td>
-                <td><a href="/countries/{{ country.country_id }}/edit">수정</a></td>
+                <td><a href="/countries/{{ country.country_id }}/edit">Edit</a></td>
             </tr>
             {% else %}
             <tr>

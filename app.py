@@ -10,12 +10,66 @@ def home():
 
 @app.route("/countries")
 def countries():
+    sort_columns = {
+        "id": "country_id",
+        "country": "country_name",
+        "status": "visit_status",
+        "visit_count": "visit_count",
+        "region": "region_name",
+    }
+    sort = request.args.get("sort", "id")
+    direction = request.args.get("direction", "desc")
+
+    if sort not in sort_columns:
+        sort = "id"
+    if direction not in {"asc", "desc"}:
+        direction = "desc"
+
+    filters = {
+        "country_id": request.args.get("country_id", "").strip(),
+        "country_name": request.args.get("country_name", "").strip(),
+        "visit_status": request.args.get("visit_status", "").strip(),
+        "visit_count": request.args.get("visit_count", "").strip(),
+        "region_id": request.args.get("region_id", "").strip(),
+    }
+    where_clauses = []
+    query_params = []
+
+    if filters["country_id"].isdigit():
+        where_clauses.append("country_id = %s")
+        query_params.append(int(filters["country_id"]))
+    if filters["country_name"]:
+        where_clauses.append("country_name LIKE %s")
+        query_params.append(f"%{filters['country_name']}%")
+    if filters["visit_status"] in {"TRIP", "STAY", "WANT"}:
+        where_clauses.append("visit_status = %s")
+        query_params.append(filters["visit_status"])
+    if filters["visit_count"].isdigit():
+        where_clauses.append("visit_count = %s")
+        query_params.append(int(filters["visit_count"]))
+    if filters["region_id"].isdigit():
+        where_clauses.append("region_id = %s")
+        query_params.append(int(filters["region_id"]))
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
     conn = get_connection()
 
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 """
+                SELECT region_id, region_name
+                FROM region_list
+                ORDER BY region_name
+                """
+            )
+            regions = cursor.fetchall()
+
+            cursor.execute(
+                f"""
                 SELECT
                     country_id,
                     country_name,
@@ -24,14 +78,23 @@ def countries():
                     region_id,
                     region_name
                 FROM country_region_view
-                ORDER BY country_id DESC
-                """
+                {where_sql}
+                ORDER BY {sort_columns[sort]} {direction.upper()}, country_id DESC
+                """,
+                query_params,
             )
             countries = cursor.fetchall()
     finally:
         conn.close()
 
-    return render_template("countries/list.html", countries=countries)
+    return render_template(
+        "countries/list.html",
+        countries=countries,
+        regions=regions,
+        filters=filters,
+        sort=sort,
+        direction=direction,
+    )
 
 @app.route("/countries/add", methods=["GET", "POST"])
 def add_country():
