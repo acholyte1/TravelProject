@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Location</title>
+</head>
+<body>
+    <h1>Add Location</h1>
+
+    <p>
+        <a href="/locations">Back to Locations</a>
+    </p>
+
+    {% if error %}
+    <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/locations/add">
+        <p>
+            <label for="country_id">Country</label><br>
+            <select id="country_id" name="country_id" required>
+                <option value="">Select a country</option>
+                {% for country in countries %}
+                <option value="{{ country.country_id }}" {% if form_data.get('country_id') == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label for="location_name">Location Name</label><br>
+            <input type="text" id="location_name" name="location_name" value="{{ form_data.get('location_name', '') }}" required>
+        </p>
+
+        <p>
+            <label for="visit_status">Visit Status</label><br>
+            <select id="visit_status" name="visit_status" required>
+                <option value="TRIP" {% if form_data.get('visit_status', 'TRIP') == 'TRIP' %}selected{% endif %}>TRIP</option>
+                <option value="STAY" {% if form_data.get('visit_status') == 'STAY' %}selected{% endif %}>STAY</option>
+                <option value="WANT" {% if form_data.get('visit_status') == 'WANT' %}selected{% endif %}>WANT</option>
+            </select>
+        </p>
+
+        <p>
+            <label for="visit_count">Visit Count</label><br>
+            <input type="number" id="visit_count" name="visit_count" min="0" value="{{ form_data.get('visit_count', '0') }}" required>
+        </p>
+
+        <p>
+            <label for="region_id">Region</label><br>
+            <select id="region_id" name="region_id" required>
+                {% for region in regions %}
+                <option value="{{ region.region_id }}" {% if form_data.get('region_id') == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>

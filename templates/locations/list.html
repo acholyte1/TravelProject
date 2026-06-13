@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Locations</title>
+</head>
+<body>
+    <h1>Locations</h1>
+
+    <p>
+        <a href="/">Home</a>
+        <a href="/locations/add">Add Location</a>
+    </p>
+
+    <form method="get" action="/locations">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="direction" value="{{ direction }}">
+
+        <label for="location_id">ID</label>
+        <input type="number" id="location_id" name="location_id" min="1" value="{{ filters.location_id }}">
+
+        <label for="country_id">Country</label>
+        <select id="country_id" name="country_id">
+            <option value="">All</option>
+            {% for country in countries %}
+            <option value="{{ country.country_id }}" {% if filters.country_id == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="location_name">Location</label>
+        <input type="text" id="location_name" name="location_name" value="{{ filters.location_name }}">
+
+        <label for="visit_status">Status</label>
+        <select id="visit_status" name="visit_status">
+            <option value="">All</option>
+            <option value="TRIP" {% if filters.visit_status == "TRIP" %}selected{% endif %}>TRIP</option>
+            <option value="STAY" {% if filters.visit_status == "STAY" %}selected{% endif %}>STAY</option>
+            <option value="WANT" {% if filters.visit_status == "WANT" %}selected{% endif %}>WANT</option>
+        </select>
+
+        <label for="visit_count">Visit Count</label>
+        <input type="number" id="visit_count" name="visit_count" min="0" value="{{ filters.visit_count }}">
+
+        <label for="region_id">Region</label>
+        <select id="region_id" name="region_id">
+            <option value="">All</option>
+            {% for region in regions %}
+            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Search</button>
+        <a href="/locations">Reset</a>
+    </form>
+
+    <table border="1">
+        <thead>
+            <tr>
+                {% set sort_fields = [
+                    ("id", "ID"),
+                    ("country", "Country"),
+                    ("location", "Location"),
+                    ("status", "Status"),
+                    ("visit_count", "Visit Count"),
+                    ("region", "Region")
+                ] %}
+                {% for field, label in sort_fields %}
+                <th>
+                    {{ label }}
+                    <a href="{{ url_for('locations', sort=field, direction='asc', **filters) }}">▲</a>
+                    <a href="{{ url_for('locations', sort=field, direction='desc', **filters) }}">▼</a>
+                    {% if sort == field %}({{ direction|upper }}){% endif %}
+                </th>
+                {% endfor %}
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for location in locations %}
+            <tr>
+                <td>{{ location.location_id }}</td>
+                <td>{{ location.country_name }}</td>
+                <td>{{ location.location_name }}</td>
+                <td>{{ location.visit_status }}</td>
+                <td>{{ location.visit_count }}</td>
+                <td>{{ location.region_name or "" }}</td>
+                <td><a href="/locations/{{ location.location_id }}/edit">Edit</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">No locations yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
