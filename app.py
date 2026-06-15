@@ -720,7 +720,7 @@ def add_trip_country():
 
             cursor.execute(
                 """
-                SELECT trip_id, in_date, out_date
+                SELECT trip_id, trip_name, in_date, out_date
                 FROM trip_list
                 WHERE is_deleted = 0
                 ORDER BY trip_id DESC
@@ -842,7 +842,7 @@ def edit_trip_country(trip_country_id):
 
             cursor.execute(
                 """
-                SELECT trip_id, in_date, out_date
+                SELECT trip_id, trip_name, in_date, out_date
                 FROM trip_list
                 WHERE is_deleted = 0
                 ORDER BY trip_id DESC
@@ -874,6 +874,7 @@ def edit_trip_country(trip_country_id):
 def trips():
     sort_columns = {
         "id": "trip_id",
+        "name": "trip_name",
         "in_date": "in_date",
         "out_date": "out_date",
         "stayed_day": "stayed_day",
@@ -887,6 +888,7 @@ def trips():
         direction = "desc"
 
     filters = {
+        "trip_name": request.args.get("trip_name", "").strip(),
         "in_date": request.args.get("in_date", "").strip(),
         "out_date": request.args.get("out_date", "").strip(),
         "period_start": request.args.get("period_start", "").strip(),
@@ -894,6 +896,10 @@ def trips():
     }
     where_clauses = ["is_deleted = 0"]
     query_params = []
+
+    if filters["trip_name"]:
+        where_clauses.append("trip_name LIKE %s")
+        query_params.append(f"%{filters['trip_name']}%")
 
     in_date = parse_date(filters["in_date"])
     out_date = parse_date(filters["out_date"])
@@ -920,7 +926,7 @@ def trips():
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 f"""
-                SELECT trip_id, in_date, out_date, stayed_day
+                SELECT trip_id, trip_name, trip_memo, in_date, out_date, stayed_day
                 FROM trip_list
                 {where_sql}
                 ORDER BY {sort_columns[sort]} {direction.upper()}, trip_id DESC
@@ -945,10 +951,16 @@ def add_trip():
     error = None
 
     if request.method == "POST":
+        trip_name = request.form.get("trip_name", "").strip()
+        trip_memo = request.form.get("trip_memo", "").strip() or None
         in_date = parse_date(request.form.get("in_date", "").strip())
         out_date = parse_date(request.form.get("out_date", "").strip())
 
-        if in_date is None or out_date is None:
+        if not trip_name:
+            error = "Trip name is required."
+        elif len(trip_name) > 100:
+            error = "Trip name must be 100 characters or fewer."
+        elif in_date is None or out_date is None:
             error = "In date and out date are required."
         elif in_date > out_date:
             error = "In date cannot be later than out date."
@@ -959,10 +971,11 @@ def add_trip():
                 with conn.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO trip_list (in_date, out_date, stayed_day)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO trip_list
+                            (trip_name, trip_memo, in_date, out_date, stayed_day)
+                        VALUES (%s, %s, %s, %s, %s)
                         """,
-                        (in_date, out_date, stayed_day),
+                        (trip_name, trip_memo, in_date, out_date, stayed_day),
                     )
                 conn.commit()
             finally:
@@ -986,7 +999,7 @@ def edit_trip(trip_id):
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 """
-                SELECT trip_id, in_date, out_date, stayed_day
+                SELECT trip_id, trip_name, trip_memo, in_date, out_date, stayed_day
                 FROM trip_list
                 WHERE trip_id = %s AND is_deleted = 0
                 """,
@@ -998,12 +1011,18 @@ def edit_trip(trip_id):
                 abort(404)
 
             if request.method == "POST":
+                trip_name = request.form.get("trip_name", "").strip()
+                trip_memo = request.form.get("trip_memo", "").strip() or None
                 in_date_value = request.form.get("in_date", "").strip()
                 out_date_value = request.form.get("out_date", "").strip()
                 in_date = parse_date(in_date_value)
                 out_date = parse_date(out_date_value)
 
-                if in_date is None or out_date is None:
+                if not trip_name:
+                    error = "Trip name is required."
+                elif len(trip_name) > 100:
+                    error = "Trip name must be 100 characters or fewer."
+                elif in_date is None or out_date is None:
                     error = "In date and out date are required."
                 elif in_date > out_date:
                     error = "In date cannot be later than out date."
@@ -1012,15 +1031,28 @@ def edit_trip(trip_id):
                     cursor.execute(
                         """
                         UPDATE trip_list
-                        SET in_date = %s, out_date = %s, stayed_day = %s
+                        SET trip_name = %s,
+                            trip_memo = %s,
+                            in_date = %s,
+                            out_date = %s,
+                            stayed_day = %s
                         WHERE trip_id = %s AND is_deleted = 0
                         """,
-                        (in_date, out_date, stayed_day, trip_id),
+                        (
+                            trip_name,
+                            trip_memo,
+                            in_date,
+                            out_date,
+                            stayed_day,
+                            trip_id,
+                        ),
                     )
                     conn.commit()
                     return redirect("/trips")
 
                 form_data = {
+                    "trip_name": trip_name,
+                    "trip_memo": trip_memo or "",
                     "in_date": in_date_value,
                     "out_date": out_date_value,
                 }

@@ -55,14 +55,25 @@ class TripRoutesTest(unittest.TestCase):
         with patch("app.get_connection", return_value=connection):
             response = self.client.post(
                 "/trips/add",
-                data={"in_date": "2026-06-01", "out_date": "2026-06-05"},
+                data={
+                    "trip_name": "Summer Trip",
+                    "trip_memo": "First memo",
+                    "in_date": "2026-06-01",
+                    "out_date": "2026-06-05",
+                },
             )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, "/trips")
         self.assertEqual(
             cursor.executions[0][1],
-            (date(2026, 6, 1), date(2026, 6, 5), 4),
+            (
+                "Summer Trip",
+                "First memo",
+                date(2026, 6, 1),
+                date(2026, 6, 5),
+                4,
+            ),
         )
         self.assertTrue(connection.committed)
 
@@ -70,7 +81,11 @@ class TripRoutesTest(unittest.TestCase):
         with patch("app.get_connection") as get_connection:
             response = self.client.post(
                 "/trips/add",
-                data={"in_date": "2026-06-05", "out_date": "2026-06-01"},
+                data={
+                    "trip_name": "Summer Trip",
+                    "in_date": "2026-06-05",
+                    "out_date": "2026-06-01",
+                },
             )
 
         self.assertEqual(response.status_code, 200)
@@ -99,6 +114,8 @@ class TripRoutesTest(unittest.TestCase):
         cursor = FakeCursor(
             fetchone_result={
                 "trip_id": 7,
+                "trip_name": "Old Name",
+                "trip_memo": None,
                 "in_date": date(2026, 6, 1),
                 "out_date": date(2026, 6, 5),
                 "stayed_day": 4,
@@ -109,13 +126,25 @@ class TripRoutesTest(unittest.TestCase):
         with patch("app.get_connection", return_value=connection):
             response = self.client.post(
                 "/trips/7/edit",
-                data={"in_date": "2026-07-10", "out_date": "2026-07-13"},
+                data={
+                    "trip_name": "New Name",
+                    "trip_memo": "Updated memo",
+                    "in_date": "2026-07-10",
+                    "out_date": "2026-07-13",
+                },
             )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             cursor.executions[1][1],
-            (date(2026, 7, 10), date(2026, 7, 13), 3, 7),
+            (
+                "New Name",
+                "Updated memo",
+                date(2026, 7, 10),
+                date(2026, 7, 13),
+                3,
+                7,
+            ),
         )
         self.assertTrue(connection.committed)
 

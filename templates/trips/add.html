@@ -14,6 +14,16 @@
 
     <form method="post" action="/trips/add">
         <p>
+            <label for="trip_name">Trip Name</label><br>
+            <input type="text" id="trip_name" name="trip_name" maxlength="100" value="{{ form_data.get('trip_name', '') }}" required>
+        </p>
+
+        <p>
+            <label for="trip_memo">Trip Memo</label><br>
+            <textarea id="trip_memo" name="trip_memo" rows="5" cols="50">{{ form_data.get('trip_memo', '') }}</textarea>
+        </p>
+
+        <p>
             <label for="in_date">In Date</label><br>
             <input type="date" id="in_date" name="in_date" value="{{ form_data.get('in_date', '') }}" required>
         </p>

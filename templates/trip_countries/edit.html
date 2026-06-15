@@ -18,7 +18,7 @@
             <select id="trip_id" name="trip_id" required>
                 <option value="">Select a trip</option>
                 {% for trip in trips %}
-                <option value="{{ trip.trip_id }}" {% if form_data.get('trip_id')|string == trip.trip_id|string %}selected{% endif %}>Trip {{ trip.trip_id }} ({{ trip.in_date }} - {{ trip.out_date }})</option>
+                <option value="{{ trip.trip_id }}" {% if form_data.get('trip_id')|string == trip.trip_id|string %}selected{% endif %}>{{ trip.trip_name }} ({{ trip.in_date }} - {{ trip.out_date }})</option>
                 {% endfor %}
             </select>
         </p>

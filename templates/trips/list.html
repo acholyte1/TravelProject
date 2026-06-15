@@ -15,6 +15,9 @@
         <input type="hidden" name="sort" value="{{ sort }}">
         <input type="hidden" name="direction" value="{{ direction }}">
 
+        <label for="trip_name">Trip Name</label>
+        <input type="text" id="trip_name" name="trip_name" value="{{ filters.trip_name }}">
+
         <label for="in_date">In Date</label>
         <input type="date" id="in_date" name="in_date" value="{{ filters.in_date }}">
 
@@ -36,6 +39,7 @@
             <tr>
                 {% set sort_fields = [
                     ("id", "ID"),
+                    ("name", "Trip Name"),
                     ("in_date", "In Date"),
                     ("out_date", "Out Date"),
                     ("stayed_day", "Stayed Days")
@@ -48,6 +52,7 @@
                     {% if sort == field %}({{ direction|upper }}){% endif %}
                 </th>
                 {% endfor %}
+                <th>Memo</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -55,9 +60,11 @@
             {% for trip in trips %}
             <tr>
                 <td>{{ trip.trip_id }}</td>
+                <td>{{ trip.trip_name }}</td>
                 <td>{{ trip.in_date }}</td>
                 <td>{{ trip.out_date }}</td>
                 <td>{{ trip.stayed_day }}</td>
+                <td>{{ trip.trip_memo or "" }}</td>
                 <td>
                     <a href="/trips/{{ trip.trip_id }}/edit">Edit</a>
                     <form method="post" action="/trips/{{ trip.trip_id }}/delete" style="display: inline;" onsubmit="return confirm('Delete this trip?');">
@@ -67,7 +74,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">No trips yet.</td>
+                <td colspan="7">No trips yet.</td>
             </tr>
             {% endfor %}
         </tbody>

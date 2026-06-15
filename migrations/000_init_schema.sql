@@ -34,6 +34,8 @@ CREATE TABLE location_list (
 
 CREATE TABLE trip_list (
     trip_id INT AUTO_INCREMENT PRIMARY KEY,
+    trip_name VARCHAR(100) NOT NULL,
+    trip_memo TEXT,
     in_date DATE,
     out_date DATE,
     stayed_day INT,
