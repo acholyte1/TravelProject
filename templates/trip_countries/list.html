@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trip Countries</title>
+</head>
+<body>
+    <h1>Trip Countries</h1>
+
+    <p>
+        <a href="/">Home</a>
+        <a href="/trip-countries/add">Add Trip Country</a>
+    </p>
+
+    <form method="get" action="/trip-countries">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="direction" value="{{ direction }}">
+
+        <label for="trip_id">Trip ID</label>
+        <input type="number" id="trip_id" name="trip_id" min="1" value="{{ filters.trip_id }}">
+
+        <label for="country_id">Country</label>
+        <select id="country_id" name="country_id">
+            <option value="">All</option>
+            {% for country in countries %}
+            <option value="{{ country.country_id }}" {% if filters.country_id == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="in_date">In Date</label>
+        <input type="date" id="in_date" name="in_date" value="{{ filters.in_date }}">
+
+        <label for="out_date">Out Date</label>
+        <input type="date" id="out_date" name="out_date" value="{{ filters.out_date }}">
+
+        <button type="submit">Search</button>
+        <a href="/trip-countries">Reset</a>
+    </form>
+
+    <table border="1">
+        <thead>
+            <tr>
+                {% set sort_fields = [
+                    ("trip_id", "Trip ID"),
+                    ("country", "Country"),
+                    ("in_date", "In Date"),
+                    ("out_date", "Out Date"),
+                    ("stayed_day", "Stayed Days")
+                ] %}
+                {% for field, label in sort_fields %}
+                <th>
+                    {{ label }}
+                    <a href="{{ url_for('trip_countries', sort=field, direction='asc', **filters) }}">Asc</a>
+                    <a href="{{ url_for('trip_countries', sort=field, direction='desc', **filters) }}">Desc</a>
+                    {% if sort == field %}({{ direction|upper }}){% endif %}
+                </th>
+                {% endfor %}
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip_country in trip_countries %}
+            <tr>
+                <td>{{ trip_country.trip_id }}</td>
+                <td>{{ trip_country.country_name }}</td>
+                <td>{{ trip_country.in_date }}</td>
+                <td>{{ trip_country.out_date }}</td>
+                <td>{{ trip_country.stayed_day }}</td>
+                <td><a href="/trip-countries/{{ trip_country.trip_country_id }}/edit">Edit</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">No trip countries yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trips</title>
+</head>
+<body>
+    <h1>Trips</h1>
+
+    <p>
+        <a href="/">Home</a>
+        <a href="/trips/add">Add Trip</a>
+    </p>
+
+    <form method="get" action="/trips">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="direction" value="{{ direction }}">
+
+        <label for="in_date">In Date</label>
+        <input type="date" id="in_date" name="in_date" value="{{ filters.in_date }}">
+
+        <label for="out_date">Out Date</label>
+        <input type="date" id="out_date" name="out_date" value="{{ filters.out_date }}">
+
+        <label for="period_start">Period Start</label>
+        <input type="date" id="period_start" name="period_start" value="{{ filters.period_start }}">
+
+        <label for="period_end">Period End</label>
+        <input type="date" id="period_end" name="period_end" value="{{ filters.period_end }}">
+
+        <button type="submit">Search</button>
+        <a href="/trips">Reset</a>
+    </form>
+
+    <table border="1">
+        <thead>
+            <tr>
+                {% set sort_fields = [
+                    ("id", "ID"),
+                    ("in_date", "In Date"),
+                    ("out_date", "Out Date"),
+                    ("stayed_day", "Stayed Days")
+                ] %}
+                {% for field, label in sort_fields %}
+                <th>
+                    {{ label }}
+                    <a href="{{ url_for('trips', sort=field, direction='asc', **filters) }}">Asc</a>
+                    <a href="{{ url_for('trips', sort=field, direction='desc', **filters) }}">Desc</a>
+                    {% if sort == field %}({{ direction|upper }}){% endif %}
+                </th>
+                {% endfor %}
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in trips %}
+            <tr>
+                <td>{{ trip.trip_id }}</td>
+                <td>{{ trip.in_date }}</td>
+                <td>{{ trip.out_date }}</td>
+                <td>{{ trip.stayed_day }}</td>
+                <td>
+                    <a href="/trips/{{ trip.trip_id }}/edit">Edit</a>
+                    <form method="post" action="/trips/{{ trip.trip_id }}/delete" style="display: inline;" onsubmit="return confirm('Delete this trip?');">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No trips yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

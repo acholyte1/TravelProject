@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Trip Country</title>
+</head>
+<body>
+    <h1>Add Trip Country</h1>
+
+    <p><a href="/trip-countries">Back to Trip Countries</a></p>
+
+    {% if error %}
+    <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/trip-countries/add">
+        <p>
+            <label for="trip_id">Trip</label><br>
+            <select id="trip_id" name="trip_id" required>
+                <option value="">Select a trip</option>
+                {% for trip in trips %}
+                <option value="{{ trip.trip_id }}" {% if form_data.get('trip_id')|string == trip.trip_id|string %}selected{% endif %}>Trip {{ trip.trip_id }} ({{ trip.in_date }} - {{ trip.out_date }})</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label for="country_id">Country</label><br>
+            <select id="country_id" name="country_id" required>
+                <option value="">Select a country</option>
+                {% for country in countries %}
+                <option value="{{ country.country_id }}" {% if form_data.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label for="in_date">In Date</label><br>
+            <input type="date" id="in_date" name="in_date" value="{{ form_data.get('in_date', '') }}" required>
+        </p>
+
+        <p>
+            <label for="out_date">Out Date</label><br>
+            <input type="date" id="out_date" name="out_date" value="{{ form_data.get('out_date', '') }}" required>
+        </p>
+
+        <p>Stayed days are calculated automatically.</p>
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>
