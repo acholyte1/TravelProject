@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ trip.trip_name }}</title>
+</head>
+<body>
+    <h1>{{ trip.trip_name }}</h1>
+
+    <p>
+        <a href="/trips">Back to Trips</a>
+        <a href="/trips/{{ trip.trip_id }}/edit">Edit Trip</a>
+    </p>
+
+    <h2>Trip Information</h2>
+    <dl>
+        <dt>Trip Name</dt>
+        <dd>{{ trip.trip_name }}</dd>
+        <dt>Trip Memo</dt>
+        <dd>{{ trip.trip_memo or "" }}</dd>
+        <dt>In Date</dt>
+        <dd>{{ trip.in_date }}</dd>
+        <dt>Out Date</dt>
+        <dd>{{ trip.out_date }}</dd>
+        <dt>Stayed Days</dt>
+        <dd>{{ trip.stayed_day }}</dd>
+    </dl>
+
+    {% if error %}
+    <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <h2>Add Visited Country</h2>
+    <form method="post" action="/trips/{{ trip.trip_id }}">
+        <input type="hidden" name="action" value="add">
+
+        <label for="add_country_id">Country</label>
+        <select id="add_country_id" name="country_id" required>
+            <option value="">Select a country</option>
+            {% for country in countries %}
+            <option value="{{ country.country_id }}" {% if add_form_data.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="add_in_date">In Date</label>
+        <input type="date" id="add_in_date" name="in_date" value="{{ add_form_data.get('in_date', '') }}" required>
+
+        <label for="add_out_date">Out Date</label>
+        <input type="date" id="add_out_date" name="out_date" value="{{ add_form_data.get('out_date', '') }}" required>
+
+        <button type="submit">Add Country</button>
+    </form>
+    <p>Stayed days are calculated automatically.</p>
+
+    <h2>Visited Countries</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Country</th>
+                <th>In Date</th>
+                <th>Out Date</th>
+                <th>Stayed Days</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip_country in trip_countries %}
+            {% set row_form = edit_form_data if editing_trip_country_id == trip_country.trip_country_id else trip_country %}
+            <tr>
+                <td>
+                    <select name="country_id" aria-label="Country" form="edit-country-{{ trip_country.trip_country_id }}" required>
+                        {% for country in countries %}
+                        <option value="{{ country.country_id }}" {% if row_form.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="date" name="in_date" aria-label="In Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('in_date', '') }}" required></td>
+                <td><input type="date" name="out_date" aria-label="Out Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('out_date', '') }}" required></td>
+                <td>{{ trip_country.stayed_day }}</td>
+                <td>
+                    <form id="edit-country-{{ trip_country.trip_country_id }}" method="post" action="/trips/{{ trip.trip_id }}">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="trip_country_id" value="{{ trip_country.trip_country_id }}">
+                        <button type="submit">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No visited countries yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

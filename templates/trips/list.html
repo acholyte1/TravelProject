@@ -47,8 +47,8 @@
                 {% for field, label in sort_fields %}
                 <th>
                     {{ label }}
-                    <a href="{{ url_for('trips', sort=field, direction='asc', **filters) }}">Asc</a>
-                    <a href="{{ url_for('trips', sort=field, direction='desc', **filters) }}">Desc</a>
+                    <a href="{{ url_for('trips', sort=field, direction='asc', **filters) }}">▲</a>
+                    <a href="{{ url_for('trips', sort=field, direction='desc', **filters) }}">▼</a>
                     {% if sort == field %}({{ direction|upper }}){% endif %}
                 </th>
                 {% endfor %}
@@ -60,7 +60,7 @@
             {% for trip in trips %}
             <tr>
                 <td>{{ trip.trip_id }}</td>
-                <td>{{ trip.trip_name }}</td>
+                <td><a href="/trips/{{ trip.trip_id }}">{{ trip.trip_name }}</a></td>
                 <td>{{ trip.in_date }}</td>
                 <td>{{ trip.out_date }}</td>
                 <td>{{ trip.stayed_day }}</td>
