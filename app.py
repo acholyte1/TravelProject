@@ -15,6 +15,15 @@ def parse_date(value):
     except ValueError:
         return None
 
+
+def parse_optional_date(value):
+    value = value.strip()
+    if not value:
+        return None, True
+
+    parsed = parse_date(value)
+    return parsed, parsed is not None
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -712,6 +721,177 @@ def trip_detail(trip_id):
         add_form_data=add_form_data,
         edit_form_data=edit_form_data,
         editing_trip_country_id=editing_trip_country_id,
+    )
+
+
+@app.route("/trips/<int:trip_id>/countries/<int:country_id>/locations", methods=["GET", "POST"])
+def trip_locations(trip_id, country_id):
+    conn = get_connection()
+    error = None
+    add_form_data = {}
+    edit_form_data = {}
+    editing_trip_location_id = None
+
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    t.trip_id,
+                    t.trip_name,
+                    t.in_date AS trip_in_date,
+                    t.out_date AS trip_out_date,
+                    tc.trip_country_id,
+                    tc.in_date AS country_in_date,
+                    tc.out_date AS country_out_date,
+                    c.country_id,
+                    c.country_name
+                FROM trip_country_list tc
+                INNER JOIN trip_list t
+                    ON tc.trip_id = t.trip_id
+                INNER JOIN country_list c
+                    ON tc.country_id = c.country_id
+                WHERE tc.trip_id = %s
+                  AND tc.country_id = %s
+                  AND t.is_deleted = 0
+                ORDER BY tc.trip_country_id
+                LIMIT 1
+                """,
+                (trip_id, country_id),
+            )
+            trip_country = cursor.fetchone()
+
+            if trip_country is None:
+                abort(404)
+
+            if request.method == "POST":
+                action = request.form.get("action", "")
+                location_id = request.form.get("location_id", "").strip()
+                location_in_value = request.form.get("location_in", "").strip()
+                location_out_value = request.form.get("location_out", "").strip()
+                location_in, location_in_valid = parse_optional_date(location_in_value)
+                location_out, location_out_valid = parse_optional_date(location_out_value)
+
+                if action == "add":
+                    add_form_data = request.form
+                elif action == "edit":
+                    trip_location_id = request.form.get("trip_location_id", "").strip()
+                    if not trip_location_id.isdigit():
+                        abort(404)
+                    editing_trip_location_id = int(trip_location_id)
+                    edit_form_data = request.form
+                    cursor.execute(
+                        """
+                        SELECT trip_location_id
+                        FROM trip_location_list
+                        WHERE trip_location_id = %s
+                          AND trip_id = %s
+                          AND country_id = %s
+                        """,
+                        (editing_trip_location_id, trip_id, country_id),
+                    )
+                    if cursor.fetchone() is None:
+                        abort(404)
+                else:
+                    abort(400)
+
+                if not location_id.isdigit():
+                    error = "Location is required."
+                elif not location_in_valid or not location_out_valid:
+                    error = "Please enter valid location dates."
+                elif location_in is not None and location_out is not None and location_in > location_out:
+                    error = "Location in cannot be later than location out."
+                else:
+                    cursor.execute(
+                        """
+                        SELECT location_id
+                        FROM location_list
+                        WHERE location_id = %s AND country_id = %s
+                        """,
+                        (int(location_id), country_id),
+                    )
+                    if cursor.fetchone() is None:
+                        error = "Please select a valid location for this country."
+                    else:
+                        if action == "add":
+                            cursor.execute(
+                                """
+                                INSERT INTO trip_location_list
+                                    (trip_id, country_id, location_id, location_in, location_out)
+                                VALUES (%s, %s, %s, %s, %s)
+                                """,
+                                (
+                                    trip_id,
+                                    country_id,
+                                    int(location_id),
+                                    location_in,
+                                    location_out,
+                                ),
+                            )
+                        else:
+                            cursor.execute(
+                                """
+                                UPDATE trip_location_list
+                                SET location_id = %s,
+                                    location_in = %s,
+                                    location_out = %s
+                                WHERE trip_location_id = %s
+                                  AND trip_id = %s
+                                  AND country_id = %s
+                                """,
+                                (
+                                    int(location_id),
+                                    location_in,
+                                    location_out,
+                                    editing_trip_location_id,
+                                    trip_id,
+                                    country_id,
+                                ),
+                            )
+                        conn.commit()
+                        return redirect(f"/trips/{trip_id}/countries/{country_id}/locations")
+
+            cursor.execute(
+                """
+                SELECT location_id, location_name
+                FROM location_list
+                WHERE country_id = %s
+                ORDER BY location_name
+                """,
+                (country_id,),
+            )
+            locations = cursor.fetchall()
+
+            cursor.execute(
+                """
+                SELECT
+                    tl.trip_location_id,
+                    tl.location_id,
+                    l.location_name,
+                    tl.location_in,
+                    tl.location_out
+                FROM trip_location_list tl
+                INNER JOIN location_list l
+                    ON tl.location_id = l.location_id
+                WHERE tl.trip_id = %s
+                  AND tl.country_id = %s
+                ORDER BY tl.location_in, tl.trip_location_id
+                """,
+                (trip_id, country_id),
+            )
+            trip_locations = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return render_template(
+        "trips/locations.html",
+        trip_country=trip_country,
+        locations=locations,
+        trip_locations=trip_locations,
+        error=error,
+        add_form_data=add_form_data,
+        edit_form_data=edit_form_data,
+        editing_trip_location_id=editing_trip_location_id,
     )
 
 

@@ -72,6 +72,7 @@
                         <option value="{{ country.country_id }}" {% if row_form.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
                         {% endfor %}
                     </select>
+                    <a href="/trips/{{ trip.trip_id }}/countries/{{ trip_country.country_id }}/locations">{{ trip_country.country_name }}</a>
                 </td>
                 <td><input type="date" name="in_date" aria-label="In Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('in_date', '') }}" required></td>
                 <td><input type="date" name="out_date" aria-label="Out Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('out_date', '') }}" required></td>

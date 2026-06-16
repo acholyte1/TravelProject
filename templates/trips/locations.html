@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations</title>
+</head>
+<body>
+    <h1>{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations</h1>
+
+    <p>
+        <a href="/trips/{{ trip_country.trip_id }}">Back to Trip Detail</a>
+        <a href="/trips">Back to Trips</a>
+    </p>
+
+    <h2>Visited Country</h2>
+    <dl>
+        <dt>Trip</dt>
+        <dd>{{ trip_country.trip_name }}</dd>
+        <dt>Country</dt>
+        <dd>{{ trip_country.country_name }}</dd>
+        <dt>Country In Date</dt>
+        <dd>{{ trip_country.country_in_date }}</dd>
+        <dt>Country Out Date</dt>
+        <dd>{{ trip_country.country_out_date }}</dd>
+    </dl>
+
+    {% if error %}
+    <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <h2>Add Visited Location</h2>
+    <form method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
+        <input type="hidden" name="action" value="add">
+
+        <label for="add_location_id">Location</label>
+        <select id="add_location_id" name="location_id" required>
+            <option value="">Select a location</option>
+            {% for location in locations %}
+            <option value="{{ location.location_id }}" {% if add_form_data.get('location_id')|string == location.location_id|string %}selected{% endif %}>{{ location.location_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="add_location_in">Location In</label>
+        <input type="date" id="add_location_in" name="location_in" value="{{ add_form_data.get('location_in', '') }}">
+
+        <label for="add_location_out">Location Out</label>
+        <input type="date" id="add_location_out" name="location_out" value="{{ add_form_data.get('location_out', '') }}">
+
+        <button type="submit">Add Location</button>
+    </form>
+
+    <h2>Visited Locations</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Location In</th>
+                <th>Location Out</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip_location in trip_locations %}
+            {% set row_form = edit_form_data if editing_trip_location_id == trip_location.trip_location_id else trip_location %}
+            <tr>
+                <td>
+                    <select name="location_id" aria-label="Location" form="edit-location-{{ trip_location.trip_location_id }}" required>
+                        {% for location in locations %}
+                        <option value="{{ location.location_id }}" {% if row_form.get('location_id')|string == location.location_id|string %}selected{% endif %}>{{ location.location_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="date" name="location_in" aria-label="Location In" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_in', '') }}"></td>
+                <td><input type="date" name="location_out" aria-label="Location Out" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_out', '') }}"></td>
+                <td>
+                    <form id="edit-location-{{ trip_location.trip_location_id }}" method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="trip_location_id" value="{{ trip_location.trip_location_id }}">
+                        <button type="submit">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No visited locations yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

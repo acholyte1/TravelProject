@@ -87,6 +87,7 @@ class TripCountryRoutesTest(unittest.TestCase):
         self.assertIn(b"Summer Trip", response.data)
         self.assertIn(b"First memo", response.data)
         self.assertIn(b"Korea", response.data)
+        self.assertIn(b"/trips/7/countries/3/locations", response.data)
         self.assertIn("FROM trip_country_list tc", query)
         self.assertIn("INNER JOIN country_list c", query)
         self.assertEqual(params, (7,))
@@ -170,6 +171,151 @@ class TripCountryRoutesTest(unittest.TestCase):
         response = self.client.get("/trip-countries")
 
         self.assertEqual(response.status_code, 404)
+
+    def test_trip_locations_shows_country_locations_and_trip_location_list(self):
+        trip_country = {
+            "trip_id": 7,
+            "trip_name": "Summer Trip",
+            "trip_in_date": date(2026, 6, 1),
+            "trip_out_date": date(2026, 6, 10),
+            "trip_country_id": 11,
+            "country_in_date": date(2026, 6, 1),
+            "country_out_date": date(2026, 6, 5),
+            "country_id": 3,
+            "country_name": "Korea",
+        }
+        cursor = FakeCursor(
+            fetchone_results=[trip_country],
+            fetchall_results=[
+                [{"location_id": 21, "location_name": "Seoul"}],
+                [
+                    {
+                        "trip_location_id": 31,
+                        "location_id": 21,
+                        "location_name": "Seoul",
+                        "location_in": date(2026, 6, 1),
+                        "location_out": date(2026, 6, 3),
+                    }
+                ],
+            ],
+        )
+        connection = FakeConnection(cursor)
+
+        with patch("app.get_connection", return_value=connection):
+            response = self.client.get("/trips/7/countries/3/locations")
+
+        location_query, location_params = cursor.executions[1]
+        trip_location_query, trip_location_params = cursor.executions[2]
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Summer Trip", response.data)
+        self.assertIn(b"Korea", response.data)
+        self.assertIn(b"Seoul", response.data)
+        self.assertIn("FROM location_list", location_query)
+        self.assertIn("WHERE country_id = %s", location_query)
+        self.assertEqual(location_params, (3,))
+        self.assertIn("FROM trip_location_list tl", trip_location_query)
+        self.assertEqual(trip_location_params, (7, 3))
+
+    def test_trip_locations_adds_location_for_trip_and_country(self):
+        trip_country = {
+            "trip_id": 7,
+            "trip_name": "Summer Trip",
+            "country_id": 3,
+            "country_name": "Korea",
+        }
+        cursor = FakeCursor(
+            fetchone_results=[
+                trip_country,
+                {"location_id": 21},
+            ]
+        )
+        connection = FakeConnection(cursor)
+
+        with patch("app.get_connection", return_value=connection):
+            response = self.client.post(
+                "/trips/7/countries/3/locations",
+                data={
+                    "action": "add",
+                    "location_id": "21",
+                    "location_in": "2026-06-01",
+                    "location_out": "2026-06-03",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, "/trips/7/countries/3/locations")
+        self.assertEqual(
+            cursor.executions[2][1],
+            (7, 3, 21, date(2026, 6, 1), date(2026, 6, 3)),
+        )
+        self.assertTrue(connection.committed)
+
+    def test_trip_locations_edits_location_for_trip_and_country(self):
+        trip_country = {
+            "trip_id": 7,
+            "trip_name": "Summer Trip",
+            "country_id": 3,
+            "country_name": "Korea",
+        }
+        cursor = FakeCursor(
+            fetchone_results=[
+                trip_country,
+                {"trip_location_id": 31},
+                {"location_id": 22},
+            ]
+        )
+        connection = FakeConnection(cursor)
+
+        with patch("app.get_connection", return_value=connection):
+            response = self.client.post(
+                "/trips/7/countries/3/locations",
+                data={
+                    "action": "edit",
+                    "trip_location_id": "31",
+                    "location_id": "22",
+                    "location_in": "2026-06-02",
+                    "location_out": "2026-06-04",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.location, "/trips/7/countries/3/locations")
+        self.assertEqual(
+            cursor.executions[3][1],
+            (22, date(2026, 6, 2), date(2026, 6, 4), 31, 7, 3),
+        )
+        self.assertTrue(connection.committed)
+
+    def test_trip_locations_rejects_location_from_another_country(self):
+        trip_country = {
+            "trip_id": 7,
+            "trip_name": "Summer Trip",
+            "country_id": 3,
+            "country_name": "Korea",
+        }
+        cursor = FakeCursor(
+            fetchone_results=[
+                trip_country,
+                None,
+            ],
+            fetchall_results=[[], []],
+        )
+        connection = FakeConnection(cursor)
+
+        with patch("app.get_connection", return_value=connection):
+            response = self.client.post(
+                "/trips/7/countries/3/locations",
+                data={
+                    "action": "add",
+                    "location_id": "99",
+                    "location_in": "2026-06-01",
+                    "location_out": "2026-06-03",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Please select a valid location for this country.", response.data)
+        self.assertFalse(connection.committed)
 
 
 if __name__ == "__main__":
