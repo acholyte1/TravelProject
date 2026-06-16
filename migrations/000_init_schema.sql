@@ -64,6 +64,7 @@ CREATE TABLE trip_location_list (
     location_id INT NOT NULL,
     location_in DATE,
     location_out DATE,
+    stayed_day INT,
     CONSTRAINT fk_trip_location_trip
         FOREIGN KEY (trip_id)
         REFERENCES trip_list(trip_id),

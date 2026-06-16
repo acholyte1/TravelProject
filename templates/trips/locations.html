@@ -55,6 +55,7 @@
                 <th>Location</th>
                 <th>Location In</th>
                 <th>Location Out</th>
+                <th>Stayed Days</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -71,6 +72,7 @@
                 </td>
                 <td><input type="date" name="location_in" aria-label="Location In" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_in', '') }}"></td>
                 <td><input type="date" name="location_out" aria-label="Location Out" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_out', '') }}"></td>
+                <td>{{ trip_location.stayed_day if trip_location.stayed_day is not none else "" }}</td>
                 <td>
                     <form id="edit-location-{{ trip_location.trip_location_id }}" method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
                         <input type="hidden" name="action" value="edit">
@@ -81,7 +83,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="4">No visited locations yet.</td>
+                <td colspan="5">No visited locations yet.</td>
             </tr>
             {% endfor %}
         </tbody>

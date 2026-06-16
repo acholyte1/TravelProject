@@ -195,6 +195,7 @@ class TripCountryRoutesTest(unittest.TestCase):
                         "location_name": "Seoul",
                         "location_in": date(2026, 6, 1),
                         "location_out": date(2026, 6, 3),
+                        "stayed_day": 2,
                     }
                 ],
             ],
@@ -210,6 +211,7 @@ class TripCountryRoutesTest(unittest.TestCase):
         self.assertIn(b"Summer Trip", response.data)
         self.assertIn(b"Korea", response.data)
         self.assertIn(b"Seoul", response.data)
+        self.assertIn(b"Stayed Days", response.data)
         self.assertIn("FROM location_list", location_query)
         self.assertIn("WHERE country_id = %s", location_query)
         self.assertEqual(location_params, (3,))
@@ -246,7 +248,7 @@ class TripCountryRoutesTest(unittest.TestCase):
         self.assertEqual(response.location, "/trips/7/countries/3/locations")
         self.assertEqual(
             cursor.executions[2][1],
-            (7, 3, 21, date(2026, 6, 1), date(2026, 6, 3)),
+            (7, 3, 21, date(2026, 6, 1), date(2026, 6, 3), 2),
         )
         self.assertTrue(connection.committed)
 
@@ -282,7 +284,7 @@ class TripCountryRoutesTest(unittest.TestCase):
         self.assertEqual(response.location, "/trips/7/countries/3/locations")
         self.assertEqual(
             cursor.executions[3][1],
-            (22, date(2026, 6, 2), date(2026, 6, 4), 31, 7, 3),
+            (22, date(2026, 6, 2), date(2026, 6, 4), 2, 31, 7, 3),
         )
         self.assertTrue(connection.committed)
 

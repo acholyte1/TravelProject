@@ -24,6 +24,13 @@ def parse_optional_date(value):
     parsed = parse_date(value)
     return parsed, parsed is not None
 
+
+def calculate_stayed_day(in_date, out_date):
+    if in_date is None or out_date is None:
+        return None
+
+    return (out_date - in_date).days
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -813,12 +820,13 @@ def trip_locations(trip_id, country_id):
                     if cursor.fetchone() is None:
                         error = "Please select a valid location for this country."
                     else:
+                        stayed_day = calculate_stayed_day(location_in, location_out)
                         if action == "add":
                             cursor.execute(
                                 """
                                 INSERT INTO trip_location_list
-                                    (trip_id, country_id, location_id, location_in, location_out)
-                                VALUES (%s, %s, %s, %s, %s)
+                                    (trip_id, country_id, location_id, location_in, location_out, stayed_day)
+                                VALUES (%s, %s, %s, %s, %s, %s)
                                 """,
                                 (
                                     trip_id,
@@ -826,6 +834,7 @@ def trip_locations(trip_id, country_id):
                                     int(location_id),
                                     location_in,
                                     location_out,
+                                    stayed_day,
                                 ),
                             )
                         else:
@@ -834,7 +843,8 @@ def trip_locations(trip_id, country_id):
                                 UPDATE trip_location_list
                                 SET location_id = %s,
                                     location_in = %s,
-                                    location_out = %s
+                                    location_out = %s,
+                                    stayed_day = %s
                                 WHERE trip_location_id = %s
                                   AND trip_id = %s
                                   AND country_id = %s
@@ -843,6 +853,7 @@ def trip_locations(trip_id, country_id):
                                     int(location_id),
                                     location_in,
                                     location_out,
+                                    stayed_day,
                                     editing_trip_location_id,
                                     trip_id,
                                     country_id,
@@ -869,7 +880,8 @@ def trip_locations(trip_id, country_id):
                     tl.location_id,
                     l.location_name,
                     tl.location_in,
-                    tl.location_out
+                    tl.location_out,
+                    tl.stayed_day
                 FROM trip_location_list tl
                 INNER JOIN location_list l
                     ON tl.location_id = l.location_id
