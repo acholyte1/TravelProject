@@ -1,6 +1,6 @@
 import pymysql
 from datetime import datetime
-from flask import Flask, abort, redirect, render_template, request
+from flask import Flask, abort, jsonify, redirect, render_template, request
 from db import get_connection
 
 app = Flask(__name__)
@@ -34,6 +34,116 @@ def calculate_stayed_day(in_date, out_date):
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+@app.route("/travel")
+def travel():
+    return render_template("travel.html")
+
+
+@app.route("/api/travel/search")
+def travel_search():
+    sort_columns = {
+        "name": "name",
+        "kind": "kind",
+        "region": "region_name",
+        "status": "visit_status",
+        "visit_count": "visit_count",
+    }
+    kind_values = {
+        "country": "country",
+        "location": "location",
+        "국가": "country",
+        "도시": "location",
+    }
+
+    query = request.args.get("q", "").strip()
+    kind = request.args.get("kind", "all").strip()
+    region = request.args.get("region", "").strip()
+    status = request.args.get("status", "").strip()
+    sort = request.args.get("sort", "name").strip()
+    direction = request.args.get("direction", "asc").strip()
+
+    if sort not in sort_columns:
+        sort = "name"
+    if direction not in {"asc", "desc"}:
+        direction = "asc"
+
+    where_clauses = []
+    query_params = []
+
+    if query:
+        where_clauses.append("(name LIKE %s OR country_name LIKE %s)")
+        query_params.extend([f"%{query}%", f"%{query}%"])
+    if kind in kind_values:
+        where_clauses.append("kind = %s")
+        query_params.append(kind_values[kind])
+    if region:
+        where_clauses.append("region_name = %s")
+        query_params.append(region)
+    if status in {"TRIP", "STAY", "WANT"}:
+        where_clauses.append("visit_status = %s")
+        query_params.append(status)
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    conn = get_connection()
+
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(
+                f"""
+                SELECT
+                    id,
+                    kind,
+                    name,
+                    country_name,
+                    region_name,
+                    visit_status,
+                    visit_count
+                FROM (
+                    SELECT
+                        c.country_id AS id,
+                        'country' AS kind,
+                        c.country_name AS name,
+                        c.country_name AS country_name,
+                        r.region_name AS region_name,
+                        c.visit_status AS visit_status,
+                        c.visit_count AS visit_count
+                    FROM country_list c
+                    LEFT JOIN region_list r
+                        ON c.region_id = r.region_id
+
+                    UNION ALL
+
+                    SELECT
+                        l.location_id AS id,
+                        'location' AS kind,
+                        l.location_name AS name,
+                        c.country_name AS country_name,
+                        COALESCE(lr.region_name, cr.region_name) AS region_name,
+                        l.visit_status AS visit_status,
+                        l.visit_count AS visit_count
+                    FROM location_list l
+                    INNER JOIN country_list c
+                        ON l.country_id = c.country_id
+                    LEFT JOIN region_list lr
+                        ON l.region_id = lr.region_id
+                    LEFT JOIN region_list cr
+                        ON c.region_id = cr.region_id
+                ) travel_records
+                {where_sql}
+                ORDER BY {sort_columns[sort]} {direction.upper()}, kind ASC, id DESC
+                """,
+                query_params,
+            )
+            items = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return jsonify({"items": items, "total": len(items)})
 
 @app.route("/countries")
 def countries():

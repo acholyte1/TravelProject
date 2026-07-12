@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Travel Archive</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/travel.css') }}">
+</head>
+<body>
+    <main data-api-url="/api/travel/search">
+        <header class="site-header">
+            <a class="brand" href="#top" aria-label="여행 기록 탐색기 홈">
+                <span class="brand-mark">TR</span>
+                <span>나의 여행 기록</span>
+            </a>
+            <nav class="admin-nav" aria-label="관리 메뉴">
+                <a href="/">Home</a>
+                <a href="/countries">Countries</a>
+                <a href="/locations">Locations</a>
+                <a href="/trips">Trips</a>
+            </nav>
+            <div class="header-meta">
+                <span class="live-dot" aria-hidden="true"></span>
+                Flask DB 연결
+            </div>
+        </header>
+
+        <section class="hero" id="top">
+            <div class="hero-copy">
+                <p class="eyebrow">TRAVEL ARCHIVE · 2026</p>
+                <h1>어디까지<br><em>다녀왔더라?</em></h1>
+                <p class="intro">국가와 도시를 한 번에 검색하고, 대륙과 방문 상태로 빠르게 좁혀보는 개인 여행 아카이브입니다.</p>
+            </div>
+
+            <div class="hero-stats" aria-label="DB 데이터 요약">
+                <div><strong id="country-count">-</strong><span>표시된 국가</span></div>
+                <div><strong id="location-count">-</strong><span>표시된 도시</span></div>
+                <div><strong id="region-count">-</strong><span>대륙</span></div>
+            </div>
+
+            <div class="search-panel" role="search">
+                <label for="travel-search">국가나 도시를 찾아보세요</label>
+                <div class="search-row">
+                    <span class="search-symbol" aria-hidden="true">⌕</span>
+                    <input
+                        id="travel-search"
+                        name="q"
+                        type="search"
+                        placeholder="예: 독일, 플렌스부르크, 유럽..."
+                        autocomplete="off"
+                    >
+                    <button class="clear-search" id="clear-search" type="button" aria-label="검색어 지우기" hidden>지우기</button>
+                </div>
+                <div class="quick-tags" id="quick-tags" aria-label="빠른 검색">
+                    <span>빠른 검색</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="explorer" aria-labelledby="result-heading">
+            <form class="explorer-toolbar" id="travel-filter-form">
+                <div class="segmented" aria-label="자료 종류">
+                    <button type="button" class="active" data-kind="all">전체</button>
+                    <button type="button" data-kind="country">국가</button>
+                    <button type="button" data-kind="location">도시</button>
+                </div>
+                <div class="selects">
+                    <label>
+                        <span class="sr-only">대륙</span>
+                        <select id="region-filter" name="region">
+                            <option value="">전체 대륙</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span class="sr-only">방문 상태</span>
+                        <select id="status-filter" name="status">
+                            <option value="">전체 상태</option>
+                            <option value="TRIP">다녀옴</option>
+                            <option value="STAY">머묾</option>
+                            <option value="WANT">가고 싶음</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span class="sr-only">정렬</span>
+                        <select id="sort-filter" name="sort">
+                            <option value="name">이름순</option>
+                            <option value="visit_count">방문 많은 순</option>
+                            <option value="status">상태순</option>
+                            <option value="region">대륙순</option>
+                            <option value="kind">종류순</option>
+                        </select>
+                    </label>
+                </div>
+            </form>
+
+            <div class="result-head">
+                <div>
+                    <p class="section-kicker">SEARCH RESULTS</p>
+                    <h2 id="result-heading">기록 <span id="result-count">0</span>개</h2>
+                </div>
+                <button class="reset-button" id="reset-filters" type="button">필터 초기화</button>
+            </div>
+
+            <div class="error-message" id="travel-error" role="alert" hidden></div>
+
+            <div class="result-layout">
+                <div class="record-list" id="record-list" role="list" aria-live="polite"></div>
+
+                <aside class="detail-card" id="detail-card" aria-live="polite">
+                    <p>왼쪽에서 기록을 선택하세요.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="flask-structure" id="flask-structure" aria-labelledby="flask-heading">
+            <div class="structure-intro">
+                <p class="section-kicker">FLASK HANDOFF</p>
+                <h2 id="flask-heading">지금 DB에<br><em>연결된 조회 화면</em></h2>
+                <p>이 화면은 React/Next 런타임 없이 Flask 템플릿과 정적 JavaScript만으로 동작합니다. 결과 목록은 기존 MySQL을 읽는 <code>/api/travel/search</code> 응답으로 갱신됩니다.</p>
+            </div>
+
+            <div class="structure-flow" aria-label="Flask 연결 흐름">
+                <article>
+                    <span>01</span>
+                    <div><h3>Read-only API</h3><p><code>country_list</code>와 <code>location_list</code>를 같은 JSON 형태로 합칩니다.</p></div>
+                </article>
+                <article>
+                    <span>02</span>
+                    <div><h3>Template + fetch</h3><p>Jinja 화면이 <code>/api/travel/search</code>를 호출하고 검색 결과만 갱신합니다.</p></div>
+                </article>
+                <article>
+                    <span>03</span>
+                    <div><h3>Admin remains</h3><p>기존 관리 화면은 <code>/countries</code>, <code>/locations</code>, <code>/trips</code>에서 그대로 유지됩니다.</p></div>
+                </article>
+            </div>
+        </section>
+
+        <footer>
+            <div>
+                <span class="footer-mark">TR</span>
+                <p><strong>여행 기록 탐색기</strong><br>country_list와 location_list를 읽는 조회 전용 화면</p>
+            </div>
+            <a href="#top">맨 위로 ↑</a>
+        </footer>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/travel.js') }}"></script>
+</body>
+</html>
