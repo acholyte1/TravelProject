@@ -71,10 +71,16 @@ class TravelSearchRoutesTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["total"], 1)
         self.assertIn("UNION ALL", query)
+        self.assertIn("location_name_en LIKE %s", query)
+        self.assertIn("COALESCE(NULLIF(l.location_name_ko, ''), l.location_name)", query)
+        self.assertIn("country_name_en LIKE %s", query)
+        self.assertIn("COALESCE(NULLIF(c.country_name_ko, ''), c.country_name)", query)
         self.assertIn("kind = %s", query)
         self.assertIn("visit_status = %s", query)
         self.assertIn("ORDER BY visit_count DESC", query)
-        self.assertEqual(params, ["%Ger%", "%Ger%", "country", "TRIP"])
+        self.assertEqual(
+            params, ["%Ger%", "%Ger%", "%Ger%", "%Ger%", "country", "TRIP"]
+        )
         self.assertTrue(connection.closed)
 
 

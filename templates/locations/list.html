@@ -26,7 +26,7 @@
             {% endfor %}
         </select>
 
-        <label for="location_name">Location</label>
+        <label for="location_name">Location (English/Korean)</label>
         <input type="text" id="location_name" name="location_name" value="{{ filters.location_name }}">
 
         <label for="visit_status">Status</label>
@@ -44,7 +44,7 @@
         <select id="region_id" name="region_id">
             <option value="">All</option>
             {% for region in regions %}
-            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
             {% endfor %}
         </select>
 

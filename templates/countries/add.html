@@ -16,8 +16,13 @@
 
     <form method="post" action="/countries/add">
         <p>
-            <label for="country_name">Country Name</label><br>
+            <label for="country_name">Country Name (English)</label><br>
             <input type="text" id="country_name" name="country_name" value="{{ form_data.get('country_name', '') }}" required>
+        </p>
+
+        <p>
+            <label for="country_name_ko">Country Name (Korean)</label><br>
+            <input type="text" id="country_name_ko" name="country_name_ko" value="{{ form_data.get('country_name_ko', '') }}">
         </p>
 
         <p>
@@ -38,7 +43,7 @@
             <label for="region_id">Region</label><br>
             <select id="region_id" name="region_id" required>
                 {% for region in regions %}
-                <option value="{{ region.region_id }}" {% if form_data.get('region_id') == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+                <option value="{{ region.region_id }}" {% if form_data.get('region_id') == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
                 {% endfor %}
             </select>
         </p>

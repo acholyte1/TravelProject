@@ -36,7 +36,7 @@
         <select id="region_id" name="region_id">
             <option value="">All</option>
             {% for region in regions %}
-            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+            <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
             {% endfor %}
         </select>
 

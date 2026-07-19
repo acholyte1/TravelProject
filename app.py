@@ -73,8 +73,11 @@ def travel_search():
     query_params = []
 
     if query:
-        where_clauses.append("(name LIKE %s OR country_name LIKE %s)")
-        query_params.extend([f"%{query}%", f"%{query}%"])
+        where_clauses.append(
+            "(name LIKE %s OR location_name_en LIKE %s "
+            "OR country_name LIKE %s OR country_name_en LIKE %s)"
+        )
+        query_params.extend([f"%{query}%"] * 4)
     if kind in kind_values:
         where_clauses.append("kind = %s")
         query_params.append(kind_values[kind])
@@ -107,9 +110,11 @@ def travel_search():
                     SELECT
                         c.country_id AS id,
                         'country' AS kind,
-                        c.country_name AS name,
-                        c.country_name AS country_name,
-                        r.region_name AS region_name,
+                        COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS name,
+                        c.country_name AS location_name_en,
+                        COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS country_name,
+                        c.country_name AS country_name_en,
+                        r.region_name_ko AS region_name,
                         c.visit_status AS visit_status,
                         c.visit_count AS visit_count
                     FROM country_list c
@@ -121,9 +126,11 @@ def travel_search():
                     SELECT
                         l.location_id AS id,
                         'location' AS kind,
-                        l.location_name AS name,
-                        c.country_name AS country_name,
-                        COALESCE(lr.region_name, cr.region_name) AS region_name,
+                        COALESCE(NULLIF(l.location_name_ko, ''), l.location_name) AS name,
+                        l.location_name AS location_name_en,
+                        COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS country_name,
+                        c.country_name AS country_name_en,
+                        COALESCE(lr.region_name_ko, cr.region_name_ko) AS region_name,
                         l.visit_status AS visit_status,
                         l.visit_count AS visit_count
                     FROM location_list l
@@ -149,7 +156,7 @@ def travel_search():
 def countries():
     sort_columns = {
         "id": "country_id",
-        "country": "country_name",
+        "country": "COALESCE(NULLIF(country_name_ko, ''), country_name)",
         "status": "visit_status",
         "visit_count": "visit_count",
         "region": "region_name",
@@ -176,8 +183,10 @@ def countries():
         where_clauses.append("country_id = %s")
         query_params.append(int(filters["country_id"]))
     if filters["country_name"]:
-        where_clauses.append("country_name LIKE %s")
-        query_params.append(f"%{filters['country_name']}%")
+        where_clauses.append("(country_name LIKE %s OR country_name_ko LIKE %s)")
+        query_params.extend(
+            [f"%{filters['country_name']}%", f"%{filters['country_name']}%"]
+        )
     if filters["visit_status"] in {"TRIP", "STAY", "WANT"}:
         where_clauses.append("visit_status = %s")
         query_params.append(filters["visit_status"])
@@ -198,9 +207,9 @@ def countries():
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -209,11 +218,11 @@ def countries():
                 f"""
                 SELECT
                     country_id,
-                    country_name,
+                    COALESCE(NULLIF(country_name_ko, ''), country_name) AS country_name,
                     visit_status,
                     visit_count,
                     region_id,
-                    region_name
+                    region_name_ko AS region_name
                 FROM country_region_view
                 {where_sql}
                 ORDER BY {sort_columns[sort]} {direction.upper()}, country_id DESC
@@ -242,6 +251,7 @@ def add_country():
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             if request.method == "POST":
                 country_name = request.form["country_name"].strip()
+                country_name_ko = request.form.get("country_name_ko", "").strip() or None
                 visit_status = request.form["visit_status"]
                 visit_count = int(request.form.get("visit_count") or 0)
                 region_id = request.form.get("region_id") or None
@@ -263,11 +273,11 @@ def add_country():
                         cursor.execute(
                             """
                             INSERT INTO country_list
-                                (country_name, visit_status, visit_count, region_id)
+                                (country_name, country_name_ko, visit_status, visit_count, region_id)
                             VALUES
-                                (%s, %s, %s, %s)
+                                (%s, %s, %s, %s, %s)
                             """,
-                            (country_name, visit_status, visit_count, region_id),
+                            (country_name, country_name_ko, visit_status, visit_count, region_id),
                         )
                         conn.commit()
                         return redirect("/countries")
@@ -279,9 +289,9 @@ def add_country():
 
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -307,6 +317,7 @@ def edit_country(country_id):
                 SELECT
                     country_id,
                     country_name,
+                    country_name_ko,
                     visit_status,
                     visit_count,
                     region_id
@@ -322,6 +333,7 @@ def edit_country(country_id):
 
             if request.method == "POST":
                 country_name = request.form["country_name"].strip()
+                country_name_ko = request.form.get("country_name_ko", "").strip() or None
                 visit_status = request.form["visit_status"]
                 visit_count = int(request.form.get("visit_count") or 0)
                 region_id = request.form.get("region_id") or None
@@ -346,6 +358,7 @@ def edit_country(country_id):
                             UPDATE country_list
                             SET
                                 country_name = %s,
+                                country_name_ko = %s,
                                 visit_status = %s,
                                 visit_count = %s,
                                 region_id = %s
@@ -353,6 +366,7 @@ def edit_country(country_id):
                             """,
                             (
                                 country_name,
+                                country_name_ko,
                                 visit_status,
                                 visit_count,
                                 region_id,
@@ -369,6 +383,7 @@ def edit_country(country_id):
 
                 form_data = {
                     "country_name": country_name,
+                    "country_name_ko": country_name_ko or "",
                     "visit_status": visit_status,
                     "visit_count": visit_count,
                     "region_id": region_id,
@@ -378,9 +393,9 @@ def edit_country(country_id):
 
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -400,11 +415,11 @@ def edit_country(country_id):
 def locations():
     sort_columns = {
         "id": "c.location_id",
-        "country": "co.country_name",
-        "location": "c.location_name",
+        "country": "COALESCE(NULLIF(co.country_name_ko, ''), co.country_name)",
+        "location": "COALESCE(NULLIF(c.location_name_ko, ''), c.location_name)",
         "status": "c.visit_status",
         "visit_count": "c.visit_count",
-        "region": "r.region_name",
+        "region": "r.region_name_ko",
     }
     sort = request.args.get("sort", "id")
     direction = request.args.get("direction", "desc")
@@ -432,8 +447,12 @@ def locations():
         where_clauses.append("c.country_id = %s")
         query_params.append(int(filters["country_id"]))
     if filters["location_name"]:
-        where_clauses.append("c.location_name LIKE %s")
-        query_params.append(f"%{filters['location_name']}%")
+        where_clauses.append(
+            "(c.location_name LIKE %s OR c.location_name_ko LIKE %s)"
+        )
+        query_params.extend(
+            [f"%{filters['location_name']}%", f"%{filters['location_name']}%"]
+        )
     if filters["visit_status"] in {"TRIP", "STAY", "WANT"}:
         where_clauses.append("c.visit_status = %s")
         query_params.append(filters["visit_status"])
@@ -454,18 +473,19 @@ def locations():
         with conn.cursor(pymysql.cursors.DictCursor) as cursor:
             cursor.execute(
                 """
-                SELECT country_id, country_name
+                SELECT country_id,
+                       COALESCE(NULLIF(country_name_ko, ''), country_name) AS country_name
                 FROM country_list
-                ORDER BY country_name
+                ORDER BY COALESCE(NULLIF(country_name_ko, ''), country_name)
                 """
             )
             countries = cursor.fetchall()
 
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -475,12 +495,12 @@ def locations():
                 SELECT
                     c.location_id,
                     c.country_id,
-                    co.country_name,
-                    c.location_name,
+                    COALESCE(NULLIF(co.country_name_ko, ''), co.country_name) AS country_name,
+                    COALESCE(NULLIF(c.location_name_ko, ''), c.location_name) AS location_name,
                     c.visit_status,
                     c.visit_count,
                     c.region_id,
-                    r.region_name
+                    r.region_name_ko AS region_name
                 FROM location_list c
                 INNER JOIN country_list co
                     ON c.country_id = co.country_id
@@ -516,6 +536,7 @@ def add_location():
             if request.method == "POST":
                 country_id = request.form.get("country_id", "").strip()
                 location_name = request.form.get("location_name", "").strip()
+                location_name_ko = request.form.get("location_name_ko", "").strip() or None
                 visit_status = request.form.get("visit_status", "")
                 visit_count = int(request.form.get("visit_count") or 0)
                 region_id = request.form.get("region_id") or None
@@ -537,12 +558,14 @@ def add_location():
                         cursor.execute(
                             """
                             INSERT INTO location_list
-                                (country_id, location_name, visit_status, visit_count, region_id)
-                            VALUES (%s, %s, %s, %s, %s)
+                                (country_id, location_name, location_name_ko,
+                                 visit_status, visit_count, region_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
                             """,
                             (
                                 int(country_id),
                                 location_name,
+                                location_name_ko,
                                 visit_status,
                                 visit_count,
                                 region_id,
@@ -553,18 +576,19 @@ def add_location():
 
             cursor.execute(
                 """
-                SELECT country_id, country_name
+                SELECT country_id,
+                       COALESCE(NULLIF(country_name_ko, ''), country_name) AS country_name
                 FROM country_list
-                ORDER BY country_name
+                ORDER BY COALESCE(NULLIF(country_name_ko, ''), country_name)
                 """
             )
             countries = cursor.fetchall()
 
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -593,6 +617,7 @@ def edit_location(location_id):
                     location_id,
                     country_id,
                     location_name,
+                    location_name_ko,
                     visit_status,
                     visit_count,
                     region_id
@@ -609,6 +634,7 @@ def edit_location(location_id):
             if request.method == "POST":
                 country_id = request.form.get("country_id", "").strip()
                 location_name = request.form.get("location_name", "").strip()
+                location_name_ko = request.form.get("location_name_ko", "").strip() or None
                 visit_status = request.form.get("visit_status", "")
                 visit_count = int(request.form.get("visit_count") or 0)
                 region_id = request.form.get("region_id") or None
@@ -633,6 +659,7 @@ def edit_location(location_id):
                             SET
                                 country_id = %s,
                                 location_name = %s,
+                                location_name_ko = %s,
                                 visit_status = %s,
                                 visit_count = %s,
                                 region_id = %s
@@ -641,6 +668,7 @@ def edit_location(location_id):
                             (
                                 int(country_id),
                                 location_name,
+                                location_name_ko,
                                 visit_status,
                                 visit_count,
                                 region_id,
@@ -653,6 +681,7 @@ def edit_location(location_id):
                 form_data = {
                     "country_id": country_id,
                     "location_name": location_name,
+                    "location_name_ko": location_name_ko or "",
                     "visit_status": visit_status,
                     "visit_count": visit_count,
                     "region_id": region_id,
@@ -662,18 +691,19 @@ def edit_location(location_id):
 
             cursor.execute(
                 """
-                SELECT country_id, country_name
+                SELECT country_id,
+                       COALESCE(NULLIF(country_name_ko, ''), country_name) AS country_name
                 FROM country_list
-                ORDER BY country_name
+                ORDER BY COALESCE(NULLIF(country_name_ko, ''), country_name)
                 """
             )
             countries = cursor.fetchall()
 
             cursor.execute(
                 """
-                SELECT region_id, region_name
+                SELECT region_id, region_name_ko
                 FROM region_list
-                ORDER BY region_name
+                ORDER BY region_name_ko
                 """
             )
             regions = cursor.fetchall()
@@ -802,9 +832,10 @@ def trip_detail(trip_id):
 
             cursor.execute(
                 """
-                SELECT country_id, country_name
+                SELECT country_id,
+                       COALESCE(NULLIF(country_name_ko, ''), country_name) AS country_name
                 FROM country_list
-                ORDER BY country_name
+                ORDER BY COALESCE(NULLIF(country_name_ko, ''), country_name)
                 """
             )
             countries = cursor.fetchall()
@@ -813,7 +844,7 @@ def trip_detail(trip_id):
                 SELECT
                     tc.trip_country_id,
                     tc.country_id,
-                    c.country_name,
+                    COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS country_name,
                     tc.in_date,
                     tc.out_date,
                     tc.stayed_day
@@ -862,7 +893,7 @@ def trip_locations(trip_id, country_id):
                     tc.in_date AS country_in_date,
                     tc.out_date AS country_out_date,
                     c.country_id,
-                    c.country_name
+                    COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS country_name
                 FROM trip_country_list tc
                 INNER JOIN trip_list t
                     ON tc.trip_id = t.trip_id
@@ -974,10 +1005,11 @@ def trip_locations(trip_id, country_id):
 
             cursor.execute(
                 """
-                SELECT location_id, location_name
+                SELECT location_id,
+                       COALESCE(NULLIF(location_name_ko, ''), location_name) AS location_name
                 FROM location_list
                 WHERE country_id = %s
-                ORDER BY location_name
+                ORDER BY COALESCE(NULLIF(location_name_ko, ''), location_name)
                 """,
                 (country_id,),
             )
@@ -988,7 +1020,7 @@ def trip_locations(trip_id, country_id):
                 SELECT
                     tl.trip_location_id,
                     tl.location_id,
-                    l.location_name,
+                    COALESCE(NULLIF(l.location_name_ko, ''), l.location_name) AS location_name,
                     tl.location_in,
                     tl.location_out,
                     tl.stayed_day

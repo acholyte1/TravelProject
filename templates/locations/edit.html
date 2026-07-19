@@ -26,8 +26,13 @@
         </p>
 
         <p>
-            <label for="location_name">Location Name</label><br>
+            <label for="location_name">Location Name (English)</label><br>
             <input type="text" id="location_name" name="location_name" value="{{ form_data.get('location_name', '') }}" required>
+        </p>
+
+        <p>
+            <label for="location_name_ko">Location Name (Korean)</label><br>
+            <input type="text" id="location_name_ko" name="location_name_ko" value="{{ form_data.get('location_name_ko', '') }}">
         </p>
 
         <p>
@@ -48,7 +53,7 @@
             <label for="region_id">Region</label><br>
             <select id="region_id" name="region_id" required>
                 {% for region in regions %}
-                <option value="{{ region.region_id }}" {% if form_data.get('region_id')|string == region.region_id|string %}selected{% endif %}>{{ region.region_name }}</option>
+                <option value="{{ region.region_id }}" {% if form_data.get('region_id')|string == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
                 {% endfor %}
             </select>
         </p>

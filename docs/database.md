@@ -25,6 +25,7 @@
 | --- | --- | --- | --- | --- |
 | `country_id` | `INT` | 불가 | PK, AUTO_INCREMENT | - |
 | `country_name` | `VARCHAR(100)` | 불가 | UNIQUE | - |
+| `country_name_ko` | `VARCHAR(100)` | 가능 | - | `NULL` |
 | `visit_status` | `VARCHAR(20)` | 가능 | - | `NULL` |
 | `visit_count` | `INT` | 가능 | - | `0` |
 | `region_id` | `INT` | 가능 | FK -> `region_list.region_id` | `NULL` |
@@ -40,6 +41,7 @@
 | `location_id` | `INT` | 불가 | PK, AUTO_INCREMENT | - |
 | `country_id` | `INT` | 불가 | FK -> `country_list.country_id` | - |
 | `location_name` | `VARCHAR(100)` | 불가 | - | - |
+| `location_name_ko` | `VARCHAR(100)` | 가능 | - | `NULL` |
 | `visit_status` | `VARCHAR(20)` | 가능 | - | `NULL` |
 | `visit_count` | `INT` | 가능 | - | `0` |
 | `region_id` | `INT` | 가능 | FK -> `region_list.region_id` | `NULL` |
@@ -125,5 +127,7 @@
 | `001_alter_trip_id_auto_increment.sql` | `trip_id` 자동 증가 보정 | 2026-06-10 수동 적용 기록 |
 | `002_alter_visit_status_enum.sql` | 국가 및 여행지 방문 상태를 `ENUM`으로 제한 | 적용 예정 |
 | `003_add_unique_country_name.sql` | 국가명 공백 정리 및 `UNIQUE` 제약 추가 | 적용 예정 |
+| `007_add_country_name_ko.sql` | 한국어 국가명 컬럼 추가 및 국가-권역 뷰 갱신 | 적용 예정 |
+| `008_add_location_name_ko.sql` | 한국어 도시명 컬럼 추가 | 적용 예정 |
 
 `002`가 적용되면 `country_list.visit_status`와 `location_list.visit_status` 타입은 `ENUM('TRIP', 'STAY', 'WANT')`으로 변경된다. 실제 운영 DB의 적용 여부는 DB에서 별도로 확인해야 한다.
