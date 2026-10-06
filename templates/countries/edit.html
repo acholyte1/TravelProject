@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Country</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Edit Country · 여행 기록{% endblock %}
+{% block content %}
+<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
     <h1>Edit Country</h1>
 
     <p>
@@ -50,5 +48,5 @@
 
         <button type="submit">Save</button>
     </form>
-</body>
-</html>
+
+{% endblock %}

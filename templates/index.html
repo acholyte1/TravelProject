@@ -1,14 +1,1 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Travel Project</title>
-</head>
-<body>
-    <h1>Travel Project</h1>
-    <p>
-        <a href="/countries">Countries</a>
-        <a href="/locations">Locations</a>
-        <a href="/trips">Trips</a>
-    </p>
-</body>
-</html>
+{% extends "base.html" %}{% block content %}<p class="section-kicker">TRAVEL ARCHIVE</p><h1>나의 여행 기록</h1><p>여행을 돌아보고, 다음 기록을 이어가세요.</p><div class="home-links"><a href="/travel">국가·도시 탐색 →</a><a href="/calendar">여행 만년달력 →</a><a href="/trips">여행 기록 관리 →</a></div>{% endblock %}

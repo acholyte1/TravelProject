@@ -41,6 +41,54 @@ def travel():
     return render_template("travel.html")
 
 
+@app.route("/calendar")
+def calendar_page():
+    from calendar import monthrange
+    from datetime import timedelta, timezone
+    from calendar_view import build_month
+
+    today = datetime.now(timezone(timedelta(hours=9))).date()
+    month = request.args.get("month", type=int) if "month" in request.args else today.month
+    if month is None or not 1 <= month <= 12:
+        abort(400)
+    selected_day = request.args.get("day", type=int) if "day" in request.args else (today.day if month == today.month else 1)
+    if selected_day is None or not 1 <= selected_day <= monthrange(2000, month)[1]:
+        abort(400)
+    connection = None
+    error = None
+    trips, countries, locations = [], [], []
+    try:
+        connection = get_connection()
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("SELECT trip_id, trip_name, trip_memo, in_date, out_date FROM trip_list WHERE is_deleted = 0")
+            trips = cursor.fetchall()
+            cursor.execute("""
+                SELECT tc.trip_id, tc.country_id, tc.in_date, tc.out_date,
+                       COALESCE(NULLIF(c.country_name_ko, ''), c.country_name) AS name
+                FROM trip_country_list tc JOIN country_list c ON c.country_id = tc.country_id
+                JOIN trip_list t ON t.trip_id = tc.trip_id WHERE t.is_deleted = 0
+            """)
+            countries = cursor.fetchall()
+            cursor.execute("""
+                SELECT tl.trip_id, tl.country_id, tl.location_in, tl.location_out,
+                       COALESCE(NULLIF(l.location_name_ko, ''), l.location_name) AS name
+                FROM trip_location_list tl JOIN location_list l ON l.location_id = tl.location_id
+                JOIN trip_list t ON t.trip_id = tl.trip_id WHERE t.is_deleted = 0
+            """)
+            locations = cursor.fetchall()
+    except pymysql.MySQLError:
+        app.logger.exception("Calendar database read failed")
+        error = "여행 기록을 불러오지 못했습니다. DB 연결을 확인한 뒤 다시 시도해 주세요."
+        trips, countries, locations = [], [], []
+    finally:
+        if connection is not None:
+            connection.close()
+    days, incomplete = build_month(trips, countries, locations, month)
+    return render_template("calendar.html", month=month, selected_day=selected_day,
+                           days=days, entries=days[selected_day], incomplete=incomplete,
+                           today=today, error=error), (503 if error else 200)
+
+
 @app.route("/api/travel/search")
 def travel_search():
     sort_columns = {
