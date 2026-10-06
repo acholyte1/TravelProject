@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}여행 만년달력 · 나의 여행 기록{% endblock %}
+{% block page_class %}calendar-content{% endblock %}
+{% block content %}
+<p class="section-kicker">TRAVEL ARCHIVE / EVERY YEAR</p>
+<h1>이날, 어디에<br><em>있었더라?</em></h1>
+<p class="calendar-intro">여러 해의 여행을 하나의 달력에 모았습니다. 날짜를 골라 그날의 여행을 연도별로 돌아보세요.</p>
+<nav class="month-nav" aria-label="월 선택">{% for number in range(1,13) %}<a href="{{ url_for('calendar_page',month=number) }}" {% if month == number %}aria-current="page"{% endif %}>{{ number }}월</a>{% endfor %}</nav>
+{% if error %}<p role="alert">{{ error }}</p><a href="{{ url_for('calendar_page',month=month,day=selected_day) }}">다시 시도</a>{% else %}
+<div class="calendar-layout"><section aria-label="{{ month }}월 날짜"><h2>{{ month }}월 <small>· 월일 기준</small></h2>
+<div class="day-grid">{% for day, records in days.items() %}<a class="day-cell {{ 'has-record' if records else '' }} {{ 'is-today' if today.month == month and today.day == day else '' }}" href="{{ url_for('calendar_page',month=month,day=day) }}#day-detail" aria-label="{{ month }}월 {{ day }}일, 여행 기록 {{ records|length }}개" {% if day == selected_day %}aria-current="date"{% endif %}><strong>{{ day }}</strong><span>{{ (records|length ~ '개 기록') if records else '—' }}</span></a>{% endfor %}</div>
+<p class="calendar-note">요일 없는 만년달력 · 입국일과 출국일 모두 표시 · 주황색 점은 오늘</p><p class="calendar-note">2월 29일에는 윤년의 실제 기록만 표시됩니다.</p>
+{% if incomplete %}<p class="calendar-note">기간이 없거나 올바르지 않은 여행 {{ incomplete }}개는 달력에서 제외했습니다. <a href="/trips">날짜 입력하기</a></p>{% endif %}
+</section><aside class="day-detail" id="day-detail"><p class="section-kicker">ON THIS DAY</p><h2>{{ month }}월 {{ selected_day }}일</h2>
+{% for entry in entries %}<article><time datetime="{{ entry.actual_date }}">{{ entry.actual_date.year }}년 · {{ entry.actual_date }}</time><h3><a href="/trips/{{ entry.trip_id }}">{{ entry.trip_name }}</a></h3><p>{{ entry.in_date }} → {{ entry.out_date }}</p>
+{% if entry.countries %}<p>국가 · {% for country in entry.countries %}{{ country.name }}{{ ', ' if not loop.last else '' }}{% endfor %}</p>{% endif %}
+{% if entry.locations %}<p>도시·장소 · {% for location in entry.locations %}{{ location.name }}{{ ', ' if not loop.last else '' }}{% endfor %}</p>{% endif %}
+{% if not entry.countries and not entry.locations %}<p class="calendar-note">이 날짜의 국가·도시 상세 일정은 아직 없습니다.</p>{% endif %}
+{% if entry.trip_memo %}<p>{{ entry.trip_memo }}</p>{% endif %}</article>{% else %}<p>이날은 아직 등록된 여행이 없습니다.</p><a href="/trips/add">여행 기록 추가 →</a>{% endfor %}</aside></div>{% endif %}
+{% endblock %}

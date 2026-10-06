@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations · 여행 기록{% endblock %}
+{% block content %}
+<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
     <h1>{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations</h1>
 
     <p>
@@ -49,7 +47,7 @@
     </form>
 
     <h2>Visited Locations</h2>
-    <table border="1">
+    <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
                 <th>Location</th>
@@ -87,6 +85,6 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
-</body>
-</html>
+    </table></div>
+
+{% endblock %}

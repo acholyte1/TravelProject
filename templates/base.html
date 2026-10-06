@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}나의 여행 기록{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/travel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/archive.css') }}"></head>
+<body><header class="site-header"><a class="brand" href="/travel"><span class="brand-mark">TR</span><span>나의 여행 기록</span></a>
+<nav class="admin-nav" aria-label="주 메뉴">{% for path, label in [('/travel','여행 탐색'),('/calendar','만년달력'),('/countries','국가 관리'),('/locations','도시 관리'),('/trips','여행 관리')] %}<a href="{{ path }}" {% if request.path == path or request.path.startswith(path + '/') %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav></header>
+<main class="archive-main {% block page_class %}admin-content{% endblock %}">{% block content %}{% endblock %}</main>
+<footer><div><span class="footer-mark">TR</span><p>나의 여행 기록 · 차곡차곡 쌓이는 발자취</p></div><a href="/travel">여행 탐색 →</a></footer></body></html>

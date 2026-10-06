@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Trips</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Trips · 여행 기록{% endblock %}
+{% block content %}
+<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
     <h1>Trips</h1>
 
     <p>
@@ -34,7 +32,7 @@
         <a href="/trips">Reset</a>
     </form>
 
-    <table border="1">
+    <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
                 {% set sort_fields = [
@@ -78,6 +76,6 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
-</body>
-</html>
+    </table></div>
+
+{% endblock %}

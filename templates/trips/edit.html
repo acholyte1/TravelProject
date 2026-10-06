@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Trip</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Edit Trip · 여행 기록{% endblock %}
+{% block content %}
+<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
     <h1>Edit Trip</h1>
 
     <p><a href="/trips">Back to Trips</a></p>
@@ -36,5 +34,5 @@
         <p>Stayed days are calculated automatically.</p>
         <button type="submit">Save</button>
     </form>
-</body>
-</html>
+
+{% endblock %}
