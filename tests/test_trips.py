@@ -89,7 +89,7 @@ class TripRoutesTest(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"In date cannot be later than out date.", response.data)
+        self.assertIn("시작일은 종료일보다 늦을 수 없습니다.", response.text)
         get_connection.assert_not_called()
 
     def test_trip_list_filters_deleted_rows_and_overlapping_period(self):

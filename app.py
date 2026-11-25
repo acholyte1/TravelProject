@@ -4,6 +4,30 @@ from flask import Flask, abort, jsonify, redirect, render_template, request
 from db import get_connection
 
 app = Flask(__name__)
+app.jinja_env.globals["visit_status_labels"] = {
+    "TRIP": "여행",
+    "STAY": "체류",
+    "WANT": "방문 희망",
+}
+
+PAGE_ERRORS = {
+    400: ("잘못된 요청", "입력한 값이나 주소를 확인해 주세요."),
+    404: ("페이지를 찾을 수 없습니다", "주소를 확인하거나 메뉴에서 페이지를 선택해 주세요."),
+    405: ("허용되지 않는 요청", "메뉴에서 원하는 페이지로 이동해 주세요."),
+    500: ("서버 오류", "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."),
+}
+
+
+@app.errorhandler(400)
+@app.errorhandler(404)
+@app.errorhandler(405)
+@app.errorhandler(500)
+def page_error(error):
+    response = error.get_response()
+    if not request.path.startswith("/api/"):
+        title, message = PAGE_ERRORS[error.code]
+        response.set_data(render_template("error.html", title=title, message=message))
+    return response
 
 
 def parse_date(value):
@@ -78,7 +102,7 @@ def calendar_page():
             locations = cursor.fetchall()
     except pymysql.MySQLError:
         app.logger.exception("Calendar database read failed")
-        error = "여행 기록을 불러오지 못했습니다. DB 연결을 확인한 뒤 다시 시도해 주세요."
+        error = "여행 기록을 불러오지 못했습니다. 데이터베이스 연결을 확인한 뒤 다시 시도해 주세요."
         trips, countries, locations = [], [], []
     finally:
         if connection is not None:
@@ -594,14 +618,14 @@ def add_location():
                     or not location_name
                     or visit_status not in {"TRIP", "STAY", "WANT"}
                 ):
-                    error = "Country, location name, and visit status are required."
+                    error = "국가, 도시명, 방문 상태를 입력해 주세요."
                 else:
                     cursor.execute(
                         "SELECT country_id FROM country_list WHERE country_id = %s",
                         (int(country_id),),
                     )
                     if cursor.fetchone() is None:
-                        error = "Please select a valid country."
+                        error = "등록된 국가를 선택해 주세요."
                     else:
                         cursor.execute(
                             """
@@ -692,14 +716,14 @@ def edit_location(location_id):
                     or not location_name
                     or visit_status not in {"TRIP", "STAY", "WANT"}
                 ):
-                    error = "Country, location name, and visit status are required."
+                    error = "국가, 도시명, 방문 상태를 입력해 주세요."
                 else:
                     cursor.execute(
                         "SELECT country_id FROM country_list WHERE country_id = %s",
                         (int(country_id),),
                     )
                     if cursor.fetchone() is None:
-                        error = "Please select a valid country."
+                        error = "등록된 국가를 선택해 주세요."
                     else:
                         cursor.execute(
                             """
@@ -821,18 +845,18 @@ def trip_detail(trip_id):
                     abort(400)
 
                 if not country_id.isdigit():
-                    error = "Country is required."
+                    error = "국가를 선택해 주세요."
                 elif in_date is None or out_date is None:
-                    error = "In date and out date are required."
+                    error = "시작일과 종료일을 입력해 주세요."
                 elif in_date > out_date:
-                    error = "In date cannot be later than out date."
+                    error = "시작일은 종료일보다 늦을 수 없습니다."
                 else:
                     cursor.execute(
                         "SELECT country_id FROM country_list WHERE country_id = %s",
                         (int(country_id),),
                     )
                     if cursor.fetchone() is None:
-                        error = "Please select a valid country."
+                        error = "등록된 국가를 선택해 주세요."
                     else:
                         stayed_day = (out_date - in_date).days
                         try:
@@ -876,7 +900,7 @@ def trip_detail(trip_id):
                             conn.rollback()
                             if exc.args[0] != 1062:
                                 raise
-                            error = "The same trip, country, and dates are already registered."
+                            error = "이 여행에 같은 국가와 날짜의 방문 기록이 이미 있습니다."
 
             cursor.execute(
                 """
@@ -992,11 +1016,11 @@ def trip_locations(trip_id, country_id):
                     abort(400)
 
                 if not location_id.isdigit():
-                    error = "Location is required."
+                    error = "도시를 선택해 주세요."
                 elif not location_in_valid or not location_out_valid:
-                    error = "Please enter valid location dates."
+                    error = "올바른 도시 도착일과 출발일을 입력해 주세요."
                 elif location_in is not None and location_out is not None and location_in > location_out:
-                    error = "Location in cannot be later than location out."
+                    error = "도시 도착일은 출발일보다 늦을 수 없습니다."
                 else:
                     cursor.execute(
                         """
@@ -1007,7 +1031,7 @@ def trip_locations(trip_id, country_id):
                         (int(location_id), country_id),
                     )
                     if cursor.fetchone() is None:
-                        error = "Please select a valid location for this country."
+                        error = "선택한 국가에 등록된 도시를 선택해 주세요."
                     else:
                         stayed_day = calculate_stayed_day(location_in, location_out)
                         if action == "add":
@@ -1184,13 +1208,13 @@ def add_trip():
         out_date = parse_date(request.form.get("out_date", "").strip())
 
         if not trip_name:
-            error = "Trip name is required."
+            error = "여행 이름을 입력해 주세요."
         elif len(trip_name) > 100:
-            error = "Trip name must be 100 characters or fewer."
+            error = "여행 이름은 100자 이하로 입력해 주세요."
         elif in_date is None or out_date is None:
-            error = "In date and out date are required."
+            error = "시작일과 종료일을 입력해 주세요."
         elif in_date > out_date:
-            error = "In date cannot be later than out date."
+            error = "시작일은 종료일보다 늦을 수 없습니다."
         else:
             stayed_day = (out_date - in_date).days
             conn = get_connection()
@@ -1246,13 +1270,13 @@ def edit_trip(trip_id):
                 out_date = parse_date(out_date_value)
 
                 if not trip_name:
-                    error = "Trip name is required."
+                    error = "여행 이름을 입력해 주세요."
                 elif len(trip_name) > 100:
-                    error = "Trip name must be 100 characters or fewer."
+                    error = "여행 이름은 100자 이하로 입력해 주세요."
                 elif in_date is None or out_date is None:
-                    error = "In date and out date are required."
+                    error = "시작일과 종료일을 입력해 주세요."
                 elif in_date > out_date:
-                    error = "In date cannot be later than out date."
+                    error = "시작일은 종료일보다 늦을 수 없습니다."
                 else:
                     stayed_day = (out_date - in_date).days
                     cursor.execute(
@@ -1326,7 +1350,7 @@ def db_test():
 
     conn.close()
     
-    return f"MySQL Version: {result[0]}"
+    return f"MySQL 버전 {result[0]}"
 
 if __name__ == "__main__":
     app.run(debug=True)

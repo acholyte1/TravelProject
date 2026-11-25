@@ -1,46 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Trips · 여행 기록{% endblock %}
+{% block title %}여행 관리 · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
-    <h1>Trips</h1>
+    <h1>여행 관리</h1>
 
     <p>
-        <a href="/">Home</a>
-        <a href="/trips/add">Add Trip</a>
+        <a href="/">홈</a>
+        <a href="/trips/add">여행 추가</a>
     </p>
 
     <form method="get" action="/trips">
         <input type="hidden" name="sort" value="{{ sort }}">
         <input type="hidden" name="direction" value="{{ direction }}">
 
-        <label for="trip_name">Trip Name</label>
+        <label for="trip_name">여행 이름</label>
         <input type="text" id="trip_name" name="trip_name" value="{{ filters.trip_name }}">
 
-        <label for="in_date">In Date</label>
+        <label for="in_date">시작일</label>
         <input type="date" id="in_date" name="in_date" value="{{ filters.in_date }}">
 
-        <label for="out_date">Out Date</label>
+        <label for="out_date">종료일</label>
         <input type="date" id="out_date" name="out_date" value="{{ filters.out_date }}">
 
-        <label for="period_start">Period Start</label>
+        <label for="period_start">검색 기간 시작일</label>
         <input type="date" id="period_start" name="period_start" value="{{ filters.period_start }}">
 
-        <label for="period_end">Period End</label>
+        <label for="period_end">검색 기간 종료일</label>
         <input type="date" id="period_end" name="period_end" value="{{ filters.period_end }}">
 
-        <button type="submit">Search</button>
-        <a href="/trips">Reset</a>
+        <button type="submit">검색</button>
+        <a href="/trips">초기화</a>
     </form>
 
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
                 {% set sort_fields = [
-                    ("id", "ID"),
-                    ("name", "Trip Name"),
-                    ("in_date", "In Date"),
-                    ("out_date", "Out Date"),
-                    ("stayed_day", "Stayed Days")
+                    ("id", "번호"),
+                    ("name", "여행 이름"),
+                    ("in_date", "시작일"),
+                    ("out_date", "종료일"),
+                    ("stayed_day", "체류 일수")
                 ] %}
                 {% for field, label in sort_fields %}
                 <th>
@@ -50,8 +49,8 @@
                     {% if sort == field %}({{ direction|upper }}){% endif %}
                 </th>
                 {% endfor %}
-                <th>Memo</th>
-                <th>Action</th>
+                <th>메모</th>
+                <th>작업</th>
             </tr>
         </thead>
         <tbody>
@@ -64,15 +63,15 @@
                 <td>{{ trip.stayed_day }}</td>
                 <td>{{ trip.trip_memo or "" }}</td>
                 <td>
-                    <a href="/trips/{{ trip.trip_id }}/edit">Edit</a>
-                    <form method="post" action="/trips/{{ trip.trip_id }}/delete" style="display: inline;" onsubmit="return confirm('Delete this trip?');">
-                        <button type="submit">Delete</button>
+                    <a href="/trips/{{ trip.trip_id }}/edit">수정</a>
+                    <form method="post" action="/trips/{{ trip.trip_id }}/delete" style="display: inline;" onsubmit="return confirm('이 여행 기록을 삭제하시겠습니까?');">
+                        <button type="submit">삭제</button>
                     </form>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="7">No trips yet.</td>
+                <td colspan="7">등록된 여행이 없습니다.</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -164,7 +164,7 @@ class TripCountryRoutesTest(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"In date cannot be later than out date.", response.data)
+        self.assertIn("시작일은 종료일보다 늦을 수 없습니다.", response.text)
         self.assertFalse(connection.committed)
 
     def test_independent_trip_country_menu_is_removed(self):
@@ -211,7 +211,7 @@ class TripCountryRoutesTest(unittest.TestCase):
         self.assertIn(b"Summer Trip", response.data)
         self.assertIn(b"Korea", response.data)
         self.assertIn(b"Seoul", response.data)
-        self.assertIn(b"Stayed Days", response.data)
+        self.assertIn("체류 일수", response.text)
         self.assertIn("FROM location_list", location_query)
         self.assertIn("WHERE country_id = %s", location_query)
         self.assertEqual(location_params, (3,))
@@ -316,7 +316,7 @@ class TripCountryRoutesTest(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Please select a valid location for this country.", response.data)
+        self.assertIn("선택한 국가에 등록된 도시를 선택해 주세요.", response.text)
         self.assertFalse(connection.committed)
 
 

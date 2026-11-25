@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 {% block title %}{{ trip.trip_name }} · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
     <h1>{{ trip.trip_name }}</h1>
 
     <p>
-        <a href="/trips">Back to Trips</a>
-        <a href="/trips/{{ trip.trip_id }}/edit">Edit Trip</a>
+        <a href="/trips">여행 목록으로</a>
+        <a href="/trips/{{ trip.trip_id }}/edit">여행 수정</a>
     </p>
 
-    <h2>Trip Information</h2>
+    <h2>여행 정보</h2>
     <dl>
-        <dt>Trip Name</dt>
+        <dt>여행 이름</dt>
         <dd>{{ trip.trip_name }}</dd>
-        <dt>Trip Memo</dt>
+        <dt>여행 메모</dt>
         <dd>{{ trip.trip_memo or "" }}</dd>
-        <dt>In Date</dt>
+        <dt>시작일</dt>
         <dd>{{ trip.in_date }}</dd>
-        <dt>Out Date</dt>
+        <dt>종료일</dt>
         <dd>{{ trip.out_date }}</dd>
-        <dt>Stayed Days</dt>
+        <dt>체류 일수</dt>
         <dd>{{ trip.stayed_day }}</dd>
     </dl>
 
@@ -27,37 +26,37 @@
     <p role="alert">{{ error }}</p>
     {% endif %}
 
-    <h2>Add Visited Country</h2>
+    <h2>방문 국가 추가</h2>
     <form method="post" action="/trips/{{ trip.trip_id }}">
         <input type="hidden" name="action" value="add">
 
-        <label for="add_country_id">Country</label>
+        <label for="add_country_id">국가</label>
         <select id="add_country_id" name="country_id" required>
-            <option value="">Select a country</option>
+            <option value="">국가를 선택하세요</option>
             {% for country in countries %}
             <option value="{{ country.country_id }}" {% if add_form_data.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
             {% endfor %}
         </select>
 
-        <label for="add_in_date">In Date</label>
+        <label for="add_in_date">입국일</label>
         <input type="date" id="add_in_date" name="in_date" value="{{ add_form_data.get('in_date', '') }}" required>
 
-        <label for="add_out_date">Out Date</label>
+        <label for="add_out_date">출국일</label>
         <input type="date" id="add_out_date" name="out_date" value="{{ add_form_data.get('out_date', '') }}" required>
 
-        <button type="submit">Add Country</button>
+        <button type="submit">국가 추가</button>
     </form>
-    <p>Stayed days are calculated automatically.</p>
+    <p>체류 일수는 자동으로 계산됩니다.</p>
 
-    <h2>Visited Countries</h2>
+    <h2>방문 국가 목록</h2>
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
-                <th>Country</th>
-                <th>In Date</th>
-                <th>Out Date</th>
-                <th>Stayed Days</th>
-                <th>Action</th>
+                <th>국가</th>
+                <th>입국일</th>
+                <th>출국일</th>
+                <th>체류 일수</th>
+                <th>작업</th>
             </tr>
         </thead>
         <tbody>
@@ -65,27 +64,27 @@
             {% set row_form = edit_form_data if editing_trip_country_id == trip_country.trip_country_id else trip_country %}
             <tr>
                 <td>
-                    <select name="country_id" aria-label="Country" form="edit-country-{{ trip_country.trip_country_id }}" required>
+                    <select name="country_id" aria-label="국가" form="edit-country-{{ trip_country.trip_country_id }}" required>
                         {% for country in countries %}
                         <option value="{{ country.country_id }}" {% if row_form.get('country_id')|string == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
                         {% endfor %}
                     </select>
                     <a href="/trips/{{ trip.trip_id }}/countries/{{ trip_country.country_id }}/locations">{{ trip_country.country_name }}</a>
                 </td>
-                <td><input type="date" name="in_date" aria-label="In Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('in_date', '') }}" required></td>
-                <td><input type="date" name="out_date" aria-label="Out Date" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('out_date', '') }}" required></td>
+                <td><input type="date" name="in_date" aria-label="입국일" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('in_date', '') }}" required></td>
+                <td><input type="date" name="out_date" aria-label="출국일" form="edit-country-{{ trip_country.trip_country_id }}" value="{{ row_form.get('out_date', '') }}" required></td>
                 <td>{{ trip_country.stayed_day }}</td>
                 <td>
                     <form id="edit-country-{{ trip_country.trip_country_id }}" method="post" action="/trips/{{ trip.trip_id }}">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="trip_country_id" value="{{ trip_country.trip_country_id }}">
-                        <button type="submit">Save</button>
+                        <button type="submit">저장</button>
                     </form>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">No visited countries yet.</td>
+                <td colspan="5">등록된 방문 국가가 없습니다.</td>
             </tr>
             {% endfor %}
         </tbody>

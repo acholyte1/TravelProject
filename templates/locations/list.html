@@ -1,65 +1,64 @@
 {% extends "base.html" %}
-{% block title %}Locations · 여행 기록{% endblock %}
+{% block title %}도시 관리 · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
-    <h1>Locations</h1>
+    <h1>도시 관리</h1>
 
     <p>
-        <a href="/">Home</a>
-        <a href="/locations/add">Add Location</a>
+        <a href="/">홈</a>
+        <a href="/locations/add">도시 추가</a>
     </p>
 
     <form method="get" action="/locations">
         <input type="hidden" name="sort" value="{{ sort }}">
         <input type="hidden" name="direction" value="{{ direction }}">
 
-        <label for="location_id">ID</label>
+        <label for="location_id">번호</label>
         <input type="number" id="location_id" name="location_id" min="1" value="{{ filters.location_id }}">
 
-        <label for="country_id">Country</label>
+        <label for="country_id">국가</label>
         <select id="country_id" name="country_id">
-            <option value="">All</option>
+            <option value="">전체</option>
             {% for country in countries %}
             <option value="{{ country.country_id }}" {% if filters.country_id == country.country_id|string %}selected{% endif %}>{{ country.country_name }}</option>
             {% endfor %}
         </select>
 
-        <label for="location_name">Location (English/Korean)</label>
+        <label for="location_name">도시명 (영문·한글)</label>
         <input type="text" id="location_name" name="location_name" value="{{ filters.location_name }}">
 
-        <label for="visit_status">Status</label>
+        <label for="visit_status">방문 상태</label>
         <select id="visit_status" name="visit_status">
-            <option value="">All</option>
-            <option value="TRIP" {% if filters.visit_status == "TRIP" %}selected{% endif %}>TRIP</option>
-            <option value="STAY" {% if filters.visit_status == "STAY" %}selected{% endif %}>STAY</option>
-            <option value="WANT" {% if filters.visit_status == "WANT" %}selected{% endif %}>WANT</option>
+            <option value="">전체</option>
+            <option value="TRIP" {% if filters.visit_status == "TRIP" %}selected{% endif %}>여행</option>
+            <option value="STAY" {% if filters.visit_status == "STAY" %}selected{% endif %}>체류</option>
+            <option value="WANT" {% if filters.visit_status == "WANT" %}selected{% endif %}>방문 희망</option>
         </select>
 
-        <label for="visit_count">Visit Count</label>
+        <label for="visit_count">방문 횟수</label>
         <input type="number" id="visit_count" name="visit_count" min="0" value="{{ filters.visit_count }}">
 
-        <label for="region_id">Region</label>
+        <label for="region_id">대륙</label>
         <select id="region_id" name="region_id">
-            <option value="">All</option>
+            <option value="">전체</option>
             {% for region in regions %}
             <option value="{{ region.region_id }}" {% if filters.region_id == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
             {% endfor %}
         </select>
 
-        <button type="submit">Search</button>
-        <a href="/locations">Reset</a>
+        <button type="submit">검색</button>
+        <a href="/locations">초기화</a>
     </form>
 
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
                 {% set sort_fields = [
-                    ("id", "ID"),
-                    ("country", "Country"),
-                    ("location", "Location"),
-                    ("status", "Status"),
-                    ("visit_count", "Visit Count"),
-                    ("region", "Region")
+                    ("id", "번호"),
+                    ("country", "국가"),
+                    ("location", "도시"),
+                    ("status", "방문 상태"),
+                    ("visit_count", "방문 횟수"),
+                    ("region", "대륙")
                 ] %}
                 {% for field, label in sort_fields %}
                 <th>
@@ -69,7 +68,7 @@
                     {% if sort == field %}({{ direction|upper }}){% endif %}
                 </th>
                 {% endfor %}
-                <th>Action</th>
+                <th>작업</th>
             </tr>
         </thead>
         <tbody>
@@ -78,14 +77,14 @@
                 <td>{{ location.location_id }}</td>
                 <td>{{ location.country_name }}</td>
                 <td>{{ location.location_name }}</td>
-                <td>{{ location.visit_status }}</td>
+                <td>{{ visit_status_labels.get(location.visit_status, location.visit_status or '') }}</td>
                 <td>{{ location.visit_count }}</td>
                 <td>{{ location.region_name or "" }}</td>
-                <td><a href="/locations/{{ location.location_id }}/edit">Edit</a></td>
+                <td><a href="/locations/{{ location.location_id }}/edit">수정</a></td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="7">No locations yet.</td>
+                <td colspan="7">등록된 도시가 없습니다.</td>
             </tr>
             {% endfor %}
         </tbody>

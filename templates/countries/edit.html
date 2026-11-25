@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Edit Country · 여행 기록{% endblock %}
+{% block title %}국가 수정 · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
-    <h1>Edit Country</h1>
+    <h1>국가 수정</h1>
 
     <p>
-        <a href="/countries">Back to Countries</a>
+        <a href="/countries">국가 목록으로</a>
     </p>
 
     {% if error %}
@@ -14,31 +13,31 @@
 
     <form method="post" action="/countries/{{ country.country_id }}/edit">
         <p>
-            <label for="country_name">Country Name (English)</label><br>
+            <label for="country_name">국가명 (영문)</label><br>
             <input type="text" id="country_name" name="country_name" value="{{ form_data.get('country_name', '') }}" required>
         </p>
 
         <p>
-            <label for="country_name_ko">Country Name (Korean)</label><br>
+            <label for="country_name_ko">국가명 (한글)</label><br>
             <input type="text" id="country_name_ko" name="country_name_ko" value="{{ form_data.get('country_name_ko', '') or '' }}">
         </p>
 
         <p>
-            <label for="visit_status">Visit Status</label><br>
+            <label for="visit_status">방문 상태</label><br>
             <select id="visit_status" name="visit_status" required>
-                <option value="TRIP" {% if form_data.get('visit_status') == 'TRIP' %}selected{% endif %}>TRIP</option>
-                <option value="STAY" {% if form_data.get('visit_status') == 'STAY' %}selected{% endif %}>STAY</option>
-                <option value="WANT" {% if form_data.get('visit_status') == 'WANT' %}selected{% endif %}>WANT</option>
+                <option value="TRIP" {% if form_data.get('visit_status') == 'TRIP' %}selected{% endif %}>여행</option>
+                <option value="STAY" {% if form_data.get('visit_status') == 'STAY' %}selected{% endif %}>체류</option>
+                <option value="WANT" {% if form_data.get('visit_status') == 'WANT' %}selected{% endif %}>방문 희망</option>
             </select>
         </p>
 
         <p>
-            <label for="visit_count">Visit Count</label><br>
+            <label for="visit_count">방문 횟수</label><br>
             <input type="number" id="visit_count" name="visit_count" min="0" value="{{ form_data.get('visit_count', '0') }}" required>
         </p>
 
         <p>
-            <label for="region_id">Region</label><br>
+            <label for="region_id">대륙</label><br>
             <select id="region_id" name="region_id" required>
                 {% for region in regions %}
                 <option value="{{ region.region_id }}" {% if form_data.get('region_id')|string == region.region_id|string %}selected{% endif %}>{{ region.region_name_ko }}</option>
@@ -46,7 +45,7 @@
             </select>
         </p>
 
-        <button type="submit">Save</button>
+        <button type="submit">저장</button>
     </form>
 
 {% endblock %}

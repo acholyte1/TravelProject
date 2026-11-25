@@ -1,10 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Add Trip · 여행 기록{% endblock %}
+{% block title %}여행 추가 · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
-    <h1>Add Trip</h1>
+    <h1>여행 추가</h1>
 
-    <p><a href="/trips">Back to Trips</a></p>
+    <p><a href="/trips">여행 목록으로</a></p>
 
     {% if error %}
     <p role="alert">{{ error }}</p>
@@ -12,27 +11,27 @@
 
     <form method="post" action="/trips/add">
         <p>
-            <label for="trip_name">Trip Name</label><br>
+            <label for="trip_name">여행 이름</label><br>
             <input type="text" id="trip_name" name="trip_name" maxlength="100" value="{{ form_data.get('trip_name', '') }}" required>
         </p>
 
         <p>
-            <label for="trip_memo">Trip Memo</label><br>
+            <label for="trip_memo">여행 메모</label><br>
             <textarea id="trip_memo" name="trip_memo" rows="5" cols="50">{{ form_data.get('trip_memo', '') }}</textarea>
         </p>
 
         <p>
-            <label for="in_date">In Date</label><br>
+            <label for="in_date">시작일</label><br>
             <input type="date" id="in_date" name="in_date" value="{{ form_data.get('in_date', '') }}" required>
         </p>
 
         <p>
-            <label for="out_date">Out Date</label><br>
+            <label for="out_date">종료일</label><br>
             <input type="date" id="out_date" name="out_date" value="{{ form_data.get('out_date', '') }}" required>
         </p>
 
-        <p>Stayed days are calculated automatically.</p>
-        <button type="submit">Save</button>
+        <p>체류 일수는 자동으로 계산됩니다.</p>
+        <button type="submit">저장</button>
     </form>
 
 {% endblock %}

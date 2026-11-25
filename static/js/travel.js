@@ -27,9 +27,9 @@
     };
 
     const statusLabel = {
-        TRIP: "다녀옴",
-        STAY: "머묾",
-        WANT: "가고 싶음",
+        TRIP: "여행",
+        STAY: "체류",
+        WANT: "방문 희망",
     };
 
     const kindLabel = {
@@ -189,8 +189,8 @@
 
         appendText(detailCard, "p", `${kindLabel[item.kind] || valueOrDash(item.kind)} 상세`, "detail-type");
         appendText(detailCard, "h3", valueOrDash(item.name));
-        appendText(detailCard, "p", item.kind === "location" ? valueOrDash(item.country_name) : "Country record", "detail-local");
-        appendText(detailCard, "p", "기존 MySQL 데이터에서 읽어 온 조회 전용 기록입니다.", "detail-note");
+        appendText(detailCard, "p", item.kind === "location" ? valueOrDash(item.country_name) : "국가 기록", "detail-local");
+        appendText(detailCard, "p", "등록된 방문 기록을 조회하고 있습니다.", "detail-note");
 
         const definitionList = document.createElement("dl");
         const details = [
@@ -291,7 +291,7 @@
             resultCount.textContent = "0";
             appendText(recordList, "div", "결과를 표시할 수 없습니다.", "empty-state");
             renderDetail(null);
-            errorBox.textContent = error.message;
+            errorBox.textContent = "검색 요청에 실패했습니다.";
             errorBox.hidden = false;
         } finally {
             recordList.removeAttribute("aria-busy");

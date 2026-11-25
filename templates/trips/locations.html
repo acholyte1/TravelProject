@@ -1,23 +1,22 @@
 {% extends "base.html" %}
-{% block title %}{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations · 여행 기록{% endblock %}
+{% block title %}{{ trip_country.trip_name }} - {{ trip_country.country_name }} 방문 도시 · 여행 기록{% endblock %}
 {% block content %}
-<p class="section-kicker">TRAVEL ARCHIVE / MANAGEMENT</p>
-    <h1>{{ trip_country.trip_name }} - {{ trip_country.country_name }} Locations</h1>
+    <h1>{{ trip_country.trip_name }} - {{ trip_country.country_name }} 방문 도시</h1>
 
     <p>
-        <a href="/trips/{{ trip_country.trip_id }}">Back to Trip Detail</a>
-        <a href="/trips">Back to Trips</a>
+        <a href="/trips/{{ trip_country.trip_id }}">여행 상세로</a>
+        <a href="/trips">여행 목록으로</a>
     </p>
 
-    <h2>Visited Country</h2>
+    <h2>방문 국가</h2>
     <dl>
-        <dt>Trip</dt>
+        <dt>여행</dt>
         <dd>{{ trip_country.trip_name }}</dd>
-        <dt>Country</dt>
+        <dt>국가</dt>
         <dd>{{ trip_country.country_name }}</dd>
-        <dt>Country In Date</dt>
+        <dt>입국일</dt>
         <dd>{{ trip_country.country_in_date }}</dd>
-        <dt>Country Out Date</dt>
+        <dt>출국일</dt>
         <dd>{{ trip_country.country_out_date }}</dd>
     </dl>
 
@@ -25,36 +24,36 @@
     <p role="alert">{{ error }}</p>
     {% endif %}
 
-    <h2>Add Visited Location</h2>
+    <h2>방문 도시 추가</h2>
     <form method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
         <input type="hidden" name="action" value="add">
 
-        <label for="add_location_id">Location</label>
+        <label for="add_location_id">도시</label>
         <select id="add_location_id" name="location_id" required>
-            <option value="">Select a location</option>
+            <option value="">도시를 선택하세요</option>
             {% for location in locations %}
             <option value="{{ location.location_id }}" {% if add_form_data.get('location_id')|string == location.location_id|string %}selected{% endif %}>{{ location.location_name }}</option>
             {% endfor %}
         </select>
 
-        <label for="add_location_in">Location In</label>
+        <label for="add_location_in">도시 도착일</label>
         <input type="date" id="add_location_in" name="location_in" value="{{ add_form_data.get('location_in', '') }}">
 
-        <label for="add_location_out">Location Out</label>
+        <label for="add_location_out">도시 출발일</label>
         <input type="date" id="add_location_out" name="location_out" value="{{ add_form_data.get('location_out', '') }}">
 
-        <button type="submit">Add Location</button>
+        <button type="submit">도시 추가</button>
     </form>
 
-    <h2>Visited Locations</h2>
+    <h2>방문 도시 목록</h2>
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
         <thead>
             <tr>
-                <th>Location</th>
-                <th>Location In</th>
-                <th>Location Out</th>
-                <th>Stayed Days</th>
-                <th>Action</th>
+                <th>도시</th>
+                <th>도시 도착일</th>
+                <th>도시 출발일</th>
+                <th>체류 일수</th>
+                <th>작업</th>
             </tr>
         </thead>
         <tbody>
@@ -62,26 +61,26 @@
             {% set row_form = edit_form_data if editing_trip_location_id == trip_location.trip_location_id else trip_location %}
             <tr>
                 <td>
-                    <select name="location_id" aria-label="Location" form="edit-location-{{ trip_location.trip_location_id }}" required>
+                    <select name="location_id" aria-label="도시" form="edit-location-{{ trip_location.trip_location_id }}" required>
                         {% for location in locations %}
                         <option value="{{ location.location_id }}" {% if row_form.get('location_id')|string == location.location_id|string %}selected{% endif %}>{{ location.location_name }}</option>
                         {% endfor %}
                     </select>
                 </td>
-                <td><input type="date" name="location_in" aria-label="Location In" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_in', '') }}"></td>
-                <td><input type="date" name="location_out" aria-label="Location Out" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_out', '') }}"></td>
+                <td><input type="date" name="location_in" aria-label="도시 도착일" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_in', '') }}"></td>
+                <td><input type="date" name="location_out" aria-label="도시 출발일" form="edit-location-{{ trip_location.trip_location_id }}" value="{{ row_form.get('location_out', '') }}"></td>
                 <td>{{ trip_location.stayed_day if trip_location.stayed_day is not none else "" }}</td>
                 <td>
                     <form id="edit-location-{{ trip_location.trip_location_id }}" method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="trip_location_id" value="{{ trip_location.trip_location_id }}">
-                        <button type="submit">Save</button>
+                        <button type="submit">저장</button>
                     </form>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5">No visited locations yet.</td>
+                <td colspan="5">등록된 방문 도시가 없습니다.</td>
             </tr>
             {% endfor %}
         </tbody>
