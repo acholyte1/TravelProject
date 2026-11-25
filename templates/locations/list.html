@@ -4,8 +4,8 @@
     <h1>도시 관리</h1>
 
     <p>
-        <a href="/">홈</a>
-        <a href="/locations/add">도시 추가</a>
+        <a class="admin-button admin-button--neutral" href="/">홈</a>
+        <a class="admin-button admin-button--primary" href="/locations/add">도시 추가</a>
     </p>
 
     <form method="get" action="/locations">
@@ -46,7 +46,7 @@
         </select>
 
         <button type="submit">검색</button>
-        <a href="/locations">초기화</a>
+        <a class="admin-button admin-button--secondary" href="/locations">초기화</a>
     </form>
 
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
@@ -80,7 +80,7 @@
                 <td>{{ visit_status_labels.get(location.visit_status, location.visit_status or '') }}</td>
                 <td>{{ location.visit_count }}</td>
                 <td>{{ location.region_name or "" }}</td>
-                <td><a href="/locations/{{ location.location_id }}/edit">수정</a></td>
+                <td><a class="admin-button admin-button--secondary admin-button--compact" href="/locations/{{ location.location_id }}/edit">수정</a></td>
             </tr>
             {% else %}
             <tr>

@@ -4,8 +4,8 @@
     <h1>여행 관리</h1>
 
     <p>
-        <a href="/">홈</a>
-        <a href="/trips/add">여행 추가</a>
+        <a class="admin-button admin-button--neutral" href="/">홈</a>
+        <a class="admin-button admin-button--primary" href="/trips/add">여행 추가</a>
     </p>
 
     <form method="get" action="/trips">
@@ -28,7 +28,7 @@
         <input type="date" id="period_end" name="period_end" value="{{ filters.period_end }}">
 
         <button type="submit">검색</button>
-        <a href="/trips">초기화</a>
+        <a class="admin-button admin-button--secondary" href="/trips">초기화</a>
     </form>
 
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
@@ -63,9 +63,9 @@
                 <td>{{ trip.stayed_day }}</td>
                 <td>{{ trip.trip_memo or "" }}</td>
                 <td>
-                    <a href="/trips/{{ trip.trip_id }}/edit">수정</a>
+                    <a class="admin-button admin-button--secondary admin-button--compact" href="/trips/{{ trip.trip_id }}/edit">수정</a>
                     <form method="post" action="/trips/{{ trip.trip_id }}/delete" style="display: inline;" onsubmit="return confirm('이 여행 기록을 삭제하시겠습니까?');">
-                        <button type="submit">삭제</button>
+                        <button class="admin-button admin-button--danger admin-button--compact" type="submit">삭제</button>
                     </form>
                 </td>
             </tr>

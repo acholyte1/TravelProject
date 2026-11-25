@@ -4,8 +4,8 @@
     <h1>국가 관리</h1>
 
     <p>
-        <a href="/">홈</a>
-        <a href="/countries/add">국가 추가</a>
+        <a class="admin-button admin-button--neutral" href="/">홈</a>
+        <a class="admin-button admin-button--primary" href="/countries/add">국가 추가</a>
     </p>
 
     <form method="get" action="/countries">
@@ -38,7 +38,7 @@
         </select>
 
         <button type="submit">검색</button>
-        <a href="/countries">초기화</a>
+        <a class="admin-button admin-button--secondary" href="/countries">초기화</a>
     </form>
 
     <div class="table-scroll" role="region" aria-label="기록 목록" tabindex="0"><table>
@@ -70,7 +70,7 @@
                 <td>{{ visit_status_labels.get(country.visit_status, country.visit_status or '') }}</td>
                 <td>{{ country.visit_count }}</td>
                 <td>{{ country.region_name or "" }}</td>
-                <td><a href="/countries/{{ country.country_id }}/edit">수정</a></td>
+                <td><a class="admin-button admin-button--secondary admin-button--compact" href="/countries/{{ country.country_id }}/edit">수정</a></td>
             </tr>
             {% else %}
             <tr>

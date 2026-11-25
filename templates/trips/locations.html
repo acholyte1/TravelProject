@@ -4,8 +4,8 @@
     <h1>{{ trip_country.trip_name }} - {{ trip_country.country_name }} 방문 도시</h1>
 
     <p>
-        <a href="/trips/{{ trip_country.trip_id }}">여행 상세로</a>
-        <a href="/trips">여행 목록으로</a>
+        <a class="admin-button admin-button--neutral" href="/trips/{{ trip_country.trip_id }}">여행 상세로</a>
+        <a class="admin-button admin-button--neutral" href="/trips">여행 목록으로</a>
     </p>
 
     <h2>방문 국가</h2>
@@ -74,7 +74,7 @@
                     <form id="edit-location-{{ trip_location.trip_location_id }}" method="post" action="/trips/{{ trip_country.trip_id }}/countries/{{ trip_country.country_id }}/locations">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="trip_location_id" value="{{ trip_location.trip_location_id }}">
-                        <button type="submit">저장</button>
+                        <button class="admin-button admin-button--primary admin-button--compact" type="submit">저장</button>
                     </form>
                 </td>
             </tr>
